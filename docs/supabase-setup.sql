@@ -59,11 +59,6 @@ CREATE INDEX IF NOT EXISTS idx_history_sector
   ON screening_history (strategy, year DESC, month_num DESC)
   WHERE strategy = 'sector';
 
--- 스윙: upsert용 unique index (onConflict에 사용)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_swing_weekly
-  ON screening_history (strategy, year, week_num)
-  WHERE strategy = 'swing';
-
 -- 매매일지 조회 인덱스
 CREATE INDEX IF NOT EXISTS idx_journal_strategy
   ON journal (strategy, buy_date DESC);

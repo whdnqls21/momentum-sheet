@@ -23,8 +23,9 @@ Excel 스프레드시트 스타일 UI로 모바일/PC에서 사용.
 - **Base URL**: `https://openapi.koreainvestment.com:9443`
 - **인증**: OAuth2 Bearer 토큰
 - **⚠ 토큰 발급 제한**: **1일 1회 원칙**. 잦은 발급 시 이용 제한됨
-  - 토큰은 Supabase `kis_token` 테이블에 영구 저장
-  - 조회 순서: 메모리 캐시 → Supabase → 새 발급
+  - 토큰은 Supabase `kis_token` 테이블에 저장 (인메모리 캐시 사용 안 함)
+  - 조회 순서: Supabase DB 조회 → 만료 시 새 발급
+  - 무효화: DB의 `expires_at`을 과거로 설정
 - **Rate Limit**: 초당 20건. API 호출 사이 최소 100ms 대기 필요
 
 ### 공통 헤더 (모든 API 요청에 필수)
@@ -210,10 +211,13 @@ CREATE TABLE screening_history (
   selected_ticker TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
--- UPSERT용 인덱스
-CREATE UNIQUE INDEX idx_swing_weekly ON screening_history(strategy, year, week_num) WHERE strategy='swing';
-CREATE UNIQUE INDEX idx_sector_monthly ON screening_history(strategy, year, month_num) WHERE strategy='sector';
+-- 유니크 인덱스 (같은 주/월에 하나만 저장)
+CREATE UNIQUE INDEX uq_swing_week ON screening_history(strategy, year, week_num) WHERE strategy='swing';
+CREATE UNIQUE INDEX uq_sector_month ON screening_history(strategy, year, month_num) WHERE strategy='sector';
 ```
+- **저장 방식**: delete + insert (partial unique index와 PostgREST upsert 호환 문제로 upsert 미사용)
+- 스윙: 같은 `(year, week_num)` 행 삭제 후 새로 삽입
+- 섹터: 같은 `(year, month_num)` 행 삭제 후 새로 삽입
 
 ---
 
@@ -269,7 +273,7 @@ momentum-sheet/
 ├── lib/
 │   ├── types.ts              # 공유 타입
 │   ├── constants.ts          # 종목풀, 매매규칙, TR_ID
-│   ├── kis-auth.ts           # 토큰 관리 (메모리 + Supabase)
+│   ├── kis-auth.ts           # 토큰 관리 (Supabase DB 기반, 캐시 없음)
 │   ├── kis-api.ts            # API 클라이언트
 │   ├── rate-limiter.ts       # 초당 20회 제한
 │   └── supabase.ts           # Supabase 클라이언트
@@ -285,11 +289,11 @@ momentum-sheet/
 | Phase | 내용 | 상태 |
 |-------|------|------|
 | 1 | 잔고현황 + 할일 체크리스트 | ✅ 완료 |
-| 2 | 단기스윙 스크리닝 | 🔧 진행중 |
-| 3 | 섹터로테이션 스크리닝 | 대기 |
-| 4 | 매매일지 (Supabase CRUD) | 대기 |
-| 5 | 성과분석 차트 | 대기 |
-| 6 | PWA + 알림 | 대기 |
+| 2 | 단기스윙 스크리닝 | ✅ 완료 |
+| 3 | 섹터로테이션 스크리닝 | ✅ 완료 |
+| 4 | 매매일지 (Supabase CRUD) | ✅ 완료 |
+| 5 | 성과분석 차트 | ✅ 완료 |
+| 6 | PWA + 알림 | ✅ 완료 |
 | 7 | Vercel 배포 | 대기 |
 
 ---
@@ -344,3 +348,5 @@ for (const stock of stocks) {
 | 토큰 발급 제한 | 하루 1회 초과 발급 | Supabase kis_token 테이블에서 조회 우선 |
 | HTTP 500 on /api/balance | kis-api.ts 래퍼 문제 | 직접 fetch 방식 사용 |
 | rate-limiter 에러 | 큐 처리 버그 | 단순 sleep 방식으로 대체 |
+| duplicate key uq_swing_week | upsert의 onConflict가 partial unique index와 불일치 | delete + insert 패턴으로 변경 |
+| 스크리닝 후 화면 미갱신 | 이력 드롭다운 로컬 갱신만 수행 | 서버 re-fetch + 최신 날짜 자동 선택 |
