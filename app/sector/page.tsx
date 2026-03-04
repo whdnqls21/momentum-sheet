@@ -139,23 +139,19 @@ export default function SectorPage() {
       }
       const data: SectorResult = await res.json();
 
-      // 1) API 응답을 바로 화면에 반영
-      const kstDate = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      // 1) API 응답을 바로 테이블에 렌더링
       setResult({ ...data, screenDate: new Date().toISOString() });
 
-      // 2) 드롭다운 목록을 로컬에서 직접 갱신
-      const newItem: HistoryOption = {
-        screen_date: kstDate,
-        month_label: data.month?.label || '',
-        selected_ticker: data.selected?.code || null,
-        selected_name: data.selected?.name || null,
-        created_at: new Date().toISOString(),
-      };
-      setHistory((prev) => {
-        const filtered = prev.filter((h) => h.screen_date !== kstDate);
-        return [newItem, ...filtered];
-      });
-      setSelectedDate(kstDate);
+      // 2) 이력 드롭다운을 서버에서 다시 fetch
+      const histRes = await fetch('/api/sector/history', { cache: 'no-store' });
+      if (histRes.ok) {
+        const histData = await histRes.json();
+        if (Array.isArray(histData) && histData.length > 0) {
+          setHistory(histData);
+          // 3) 방금 실행한 날짜를 드롭다운에서 자동 선택 (최신 항목)
+          setSelectedDate(histData[0].screen_date);
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

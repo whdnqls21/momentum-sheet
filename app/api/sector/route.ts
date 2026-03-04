@@ -139,11 +139,18 @@ export async function GET() {
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
 
-    // Supabase 저장: (strategy, screen_date) 기준 UPSERT
+    // Supabase 저장: 같은 월 기존 데이터 삭제 후 새로 삽입 (partial unique index 호환 문제 우회)
     const screenDate = now.toISOString().slice(0, 10);
-    const { error: upsertError } = await supabase
+    await supabase
       .from('screening_history')
-      .upsert({
+      .delete()
+      .eq('strategy', 'sector')
+      .eq('year', year)
+      .eq('month_num', month);
+
+    const { error: insertError } = await supabase
+      .from('screening_history')
+      .insert({
         strategy: 'sector',
         screen_date: screenDate,
         year,
@@ -152,10 +159,10 @@ export async function GET() {
         result: results,
         selected_ticker: top?.code || null,
         selected_name: top?.name || null,
-      }, { onConflict: 'strategy,screen_date', ignoreDuplicates: false });
+      });
 
-    if (upsertError) {
-      console.error('[Sector] Supabase 저장 실패:', upsertError.message);
+    if (insertError) {
+      console.error('[Sector] Supabase 저장 실패:', insertError.message);
     } else {
       console.log(`[Sector] Supabase 저장 성공: ${screenDate} (${year}년 ${month}월), 선택: ${top?.name || '없음'}`);
     }
