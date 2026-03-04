@@ -47,7 +47,7 @@ export async function kisGet(
       const msgCd = data?.msg_cd || '';
       const msg1 = data?.msg1 || '';
       if (attempt === 0 && (msgCd === 'EGW00123' || msg1.includes('token'))) {
-        if (wasTokenRecentlyIssued()) {
+        if (await wasTokenRecentlyIssued()) {
           console.log(`[KIS API] 최근 발급 토큰으로 EGW00123 수신, 1초 후 동일 토큰 재시도`);
           await new Promise(r => setTimeout(r, 1000));
           await acquireSlot();
