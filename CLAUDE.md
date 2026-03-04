@@ -211,13 +211,11 @@ CREATE TABLE screening_history (
   selected_ticker TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
--- 유니크 인덱스 (같은 주/월에 하나만 저장)
-CREATE UNIQUE INDEX uq_swing_week ON screening_history(strategy, year, week_num) WHERE strategy='swing';
-CREATE UNIQUE INDEX uq_sector_month ON screening_history(strategy, year, month_num) WHERE strategy='sector';
+-- 유니크 인덱스 (같은 전략+날짜에 하나만 저장, 같은 주/월이라도 날짜 다르면 별도 저장)
+CREATE UNIQUE INDEX uq_strategy_screen_date ON screening_history(strategy, screen_date);
 ```
-- **저장 방식**: delete + insert (partial unique index와 PostgREST upsert 호환 문제로 upsert 미사용)
-- 스윙: 같은 `(year, week_num)` 행 삭제 후 새로 삽입
-- 섹터: 같은 `(year, month_num)` 행 삭제 후 새로 삽입
+- **저장 방식**: upsert (`onConflict: 'strategy,screen_date'`)
+- 같은 날 재실행 → 덮어쓰기, 다른 날 실행 → 별도 행 생성
 
 ---
 
@@ -348,5 +346,5 @@ for (const stock of stocks) {
 | 토큰 발급 제한 | 하루 1회 초과 발급 | Supabase kis_token 테이블에서 조회 우선 |
 | HTTP 500 on /api/balance | kis-api.ts 래퍼 문제 | 직접 fetch 방식 사용 |
 | rate-limiter 에러 | 큐 처리 버그 | 단순 sleep 방식으로 대체 |
-| duplicate key uq_swing_week | upsert의 onConflict가 partial unique index와 불일치 | delete + insert 패턴으로 변경 |
+| duplicate key uq_swing_week | onConflict가 partial unique index와 불일치 | 유니크 제약을 (strategy, screen_date)로 변경, upsert 사용 |
 | 스크리닝 후 화면 미갱신 | 이력 드롭다운 로컬 갱신만 수행 | 서버 re-fetch + 최신 날짜 자동 선택 |

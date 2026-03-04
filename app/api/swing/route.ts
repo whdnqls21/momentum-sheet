@@ -312,17 +312,9 @@ function getISOWeek(date: Date): { year: number; week: number; label: string } {
 async function saveHistory(stocks: SwingStock[], weekInfo: { year: number; week: number; label: string }, selectedTicker: string | null, selectedName: string | null) {
   const screenDate = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  // 같은 주차 기존 데이터 삭제 후 새로 삽입 (partial unique index와 PostgREST upsert 호환 문제 우회)
-  await supabase
-    .from('screening_history')
-    .delete()
-    .eq('strategy', 'swing')
-    .eq('year', weekInfo.year)
-    .eq('week_num', weekInfo.week);
-
   const { error } = await supabase
     .from('screening_history')
-    .insert({
+    .upsert({
       strategy: 'swing',
       screen_date: screenDate,
       year: weekInfo.year,
@@ -331,7 +323,7 @@ async function saveHistory(stocks: SwingStock[], weekInfo: { year: number; week:
       result: stocks,
       selected_ticker: selectedTicker,
       selected_name: selectedName,
-    });
+    }, { onConflict: 'strategy,screen_date', ignoreDuplicates: false });
 
   if (error) {
     console.error('[Swing] Supabase 저장 실패:', error.message);

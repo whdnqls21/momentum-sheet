@@ -40,23 +40,17 @@ CREATE TABLE IF NOT EXISTS screening_history (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 스윙: 같은 연도+주차에 하나의 결과만 저장
-CREATE UNIQUE INDEX IF NOT EXISTS uq_swing_week
-  ON screening_history (strategy, year, week_num)
-  WHERE strategy = 'swing';
-
--- 섹터: 같은 연도+월에 하나의 결과만 저장
-CREATE UNIQUE INDEX IF NOT EXISTS uq_sector_month
-  ON screening_history (strategy, year, month_num)
-  WHERE strategy = 'sector';
+-- 같은 전략+날짜에 하나의 결과만 저장 (같은 주/월이라도 날짜가 다르면 별도 저장)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_strategy_screen_date
+  ON screening_history (strategy, screen_date);
 
 -- 조회 성능 인덱스
 CREATE INDEX IF NOT EXISTS idx_history_swing
-  ON screening_history (strategy, year DESC, week_num DESC)
+  ON screening_history (strategy, screen_date DESC)
   WHERE strategy = 'swing';
 
 CREATE INDEX IF NOT EXISTS idx_history_sector
-  ON screening_history (strategy, year DESC, month_num DESC)
+  ON screening_history (strategy, screen_date DESC)
   WHERE strategy = 'sector';
 
 -- 매매일지 조회 인덱스

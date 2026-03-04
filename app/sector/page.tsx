@@ -130,6 +130,7 @@ export default function SectorPage() {
   const handleRun = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setResult(null);
 
     try {
       const res = await fetch('/api/sector', { cache: 'no-store' });
