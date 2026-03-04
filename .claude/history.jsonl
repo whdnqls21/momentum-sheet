@@ -1,0 +1,76 @@
+{"ts":"2026-02-26T06:37:49.210Z","ticket":"WORK-20260226","phase":"plan","action":"session_start","msg":"세션 시작"}
+{"ts":"2026-02-26T06:39:23.532Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/docs/supabase-setup.sql","msg":"파일 수정: supabase-setup.sql"}
+{"ts":"2026-02-26T06:39:38.750Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/lib/kis-auth.ts","msg":"파일 수정: kis-auth.ts"}
+{"ts":"2026-02-26T06:39:46.916Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T06:41:53.225Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T06:52:03.520Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T06:52:15.928Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/history/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T06:53:09.454Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T06:56:03.748Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/lib/types.ts","msg":"파일 수정: types.ts"}
+{"ts":"2026-02-26T06:56:11.207Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T06:56:15.194Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T06:56:20.873Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T06:56:27.724Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T06:56:32.303Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T06:56:54.984Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:01:47.238Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:01:50.292Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:09:43.831Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:10:42.265Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:10:44.670Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:12:36.930Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:12:44.830Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:12:49.896Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:12:53.999Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:12:58.180Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:13:03.863Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:14:11.076Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:14:17.708Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:14:24.737Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:42:39.439Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/layout.tsx","msg":"파일 수정: layout.tsx"}
+{"ts":"2026-02-26T07:45:04.256Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:45:15.691Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/history/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:49:26.789Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:52:27.777Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:57:29.740Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T07:58:07.584Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T07:59:30.118Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T07:59:35.992Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/docs/supabase-setup.sql","msg":"파일 수정: supabase-setup.sql"}
+{"ts":"2026-02-26T07:59:41.248Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T08:02:04.226Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T08:02:10.421Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T08:08:21.864Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T08:08:27.346Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T08:12:53.978Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/sector/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T08:13:01.451Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/sector/history/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T08:13:46.882Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/sector/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T22:55:30.236Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T23:03:44.765Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/journal/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T23:03:55.582Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/journal/[id]/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T23:06:38.123Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/journal/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T23:31:50.959Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T23:37:04.068Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T23:37:10.925Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T23:37:19.543Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/sector/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T23:39:44.221Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/sector/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T23:40:12.099Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T23:40:34.172Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T23:44:55.292Z","ticket":"WORK-20260226","phase":"plan","action":"session_start","msg":"세션 시작"}
+{"ts":"2026-02-26T23:45:23.829Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T23:45:30.695Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T23:45:39.116Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T23:51:10.815Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/sector/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-26T23:51:18.141Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-26T23:57:42.020Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-26T23:57:49.295Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-27T00:00:34.864Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-27T00:01:33.493Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/swing/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-27T00:01:35.127Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/api/sector/route.ts","msg":"파일 수정: route.ts"}
+{"ts":"2026-02-27T00:01:39.898Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-27T00:05:08.235Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-27T00:05:12.702Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-27T00:07:39.099Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/swing/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-27T00:07:46.694Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
+{"ts":"2026-02-27T00:08:12.506Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/sector/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-27T00:08:27.754Z","ticket":"WORK-20260226","phase":"plan","action":"file_edit","file":"/Users/ad1117/momentum-sheet/app/sector/page.tsx","msg":"파일 수정: page.tsx"}
+{"ts":"2026-02-27T00:08:32.307Z","ticket":"WORK-20260226","phase":"plan","action":"session_end","msg":"세션 종료"}
