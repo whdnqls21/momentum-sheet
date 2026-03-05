@@ -28,11 +28,20 @@ function fmtOption(h: HistoryOption): string {
   return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}(${DAY_NAMES[d.getDay()]})`;
 }
 
+function weekLabel(screenDate: string): string {
+  const d = new Date(screenDate + 'T00:00:00');
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const firstDay = new Date(year, d.getMonth(), 1);
+  const weekOfMonth = Math.ceil((d.getDate() + firstDay.getDay()) / 7);
+  return `${year}년 ${month}월 ${weekOfMonth}주차`;
+}
+
 function groupByWeek(items: HistoryOption[]): { label: string; items: HistoryOption[] }[] {
   const groups: { label: string; items: HistoryOption[] }[] = [];
   const map = new Map<string, HistoryOption[]>();
   for (const h of items) {
-    const key = h.week_label || '기타';
+    const key = weekLabel(h.screen_date);
     if (!map.has(key)) { map.set(key, []); groups.push({ label: key, items: map.get(key)! }); }
     map.get(key)!.push(h);
   }
