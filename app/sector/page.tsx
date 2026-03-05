@@ -236,18 +236,20 @@ export default function SectorPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ ...S.section, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} colSpan={2}>
-                <span>섹터로테이션 스크리닝</span>
-                <button
-                  onClick={() => setRulesOpen(true)}
-                  style={{
-                    background: 'none', border: '1px solid #b4c6e7', borderRadius: 2,
-                    color: '#1f3864', fontSize: 10, padding: '1px 6px', cursor: 'pointer',
-                    fontWeight: 600,
-                  }}
-                >
-                  📋 전략 규칙
-                </button>
+              <td style={S.section} colSpan={2}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>섹터로테이션 스크리닝</span>
+                  <button
+                    onClick={() => setRulesOpen(true)}
+                    style={{
+                      background: 'none', border: '1px solid #b4c6e7', borderRadius: 2,
+                      color: '#1f3864', fontSize: 10, padding: '1px 6px', cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    📋 전략 규칙
+                  </button>
+                </div>
               </td>
             </tr>
             <tr>
