@@ -287,8 +287,7 @@ momentum-sheet/
 │   └── supabase.ts               # Supabase 클라이언트
 └── docs/
     ├── SPEC.md                   # 기능명세서
-    ├── supabase-setup.sql        # DB 셋업 SQL
-    └── RSI_진입필터_작업지시.md    # RSI 진입 필터 설계 문서
+    └── supabase-setup.sql        # DB 셋업 SQL
 ```
 
 ---
