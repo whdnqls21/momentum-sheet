@@ -204,8 +204,18 @@ export default function SwingPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={S.section} colSpan={2}>
-                단기스윙 스크리닝
+              <td style={{ ...S.section, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} colSpan={2}>
+                <span>단기스윙 스크리닝</span>
+                <button
+                  onClick={() => setRulesOpen(true)}
+                  style={{
+                    background: 'none', border: '1px solid #b4c6e7', borderRadius: 2,
+                    color: '#1f3864', fontSize: 10, padding: '1px 6px', cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  📋 전략 규칙
+                </button>
               </td>
             </tr>
             <tr>
@@ -219,9 +229,6 @@ export default function SwingPage() {
                     style={loading ? { backgroundColor: '#e2efda' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
-                  </button>
-                  <button className="btn-ribbon" onClick={() => setRulesOpen(true)}>
-                    📋 전략 규칙
                   </button>
                   <select
                     value={selectedDate}
