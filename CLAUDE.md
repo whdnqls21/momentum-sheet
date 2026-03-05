@@ -275,7 +275,8 @@ momentum-sheet/
 │   ├── layout.tsx
 │   └── globals.css
 ├── components/
-│   └── ExcelFrame.tsx            # Excel 프레임 (리본바, 수식줄, 시트탭, 상태바)
+│   ├── ExcelFrame.tsx            # Excel 프레임 (리본바, 수식줄, 시트탭, 상태바)
+│   └── StrategyRulesModal.tsx    # 전략 규칙 모달 (공통)
 ├── lib/
 │   ├── types.ts                  # 공유 타입
 │   ├── constants.ts              # 종목풀, 매매규칙, TR_ID
@@ -303,7 +304,7 @@ momentum-sheet/
 | 5 | 성과분석 차트 | ✅ 완료 |
 | 6 | PWA + 알림 | ✅ 완료 |
 | 7 | RSI(3) 진입 필터 | ✅ 완료 |
-| 8 | Vercel 배포 | 대기 |
+| 8 | Vercel 배포 | ✅ 완료 |
 
 ---
 

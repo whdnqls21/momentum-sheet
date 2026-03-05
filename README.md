@@ -80,7 +80,8 @@ momentum-sheet/
 │   ├── layout.tsx
 │   └── globals.css
 ├── components/
-│   └── ExcelFrame.tsx            ← Excel 스타일 프레임
+│   ├── ExcelFrame.tsx            ← Excel 스타일 프레임
+│   └── StrategyRulesModal.tsx    ← 전략 규칙 모달 (공통)
 ├── lib/
 │   ├── types.ts                  ← 공유 타입
 │   ├── constants.ts              ← 종목풀, 매매규칙, TR_ID
@@ -92,7 +93,6 @@ momentum-sheet/
 ├── docs/
 │   ├── SPEC.md                   ← 기능명세서
 │   ├── supabase-setup.sql        ← DB 셋업 스크립트
-│   └── RSI_진입필터_작업지시.md    ← RSI 진입 필터 설계 문서
 └── .env.local.example
 ```
 
@@ -120,9 +120,8 @@ RSI(3) >= 30 → WAIT (다음 날 장 마감 후 재확인)
 | 5 | 성과분석 차트 | ✅ 완료 |
 | 6 | PWA + 알림 | ✅ 완료 |
 | 7 | RSI(3) 진입 필터 | ✅ 완료 |
-| 8 | Vercel 배포 | 대기 |
+| 8 | Vercel 배포 | ✅ 완료 |
 
 ## 문서
 
 - 기능명세서: `docs/SPEC.md`
-- RSI 진입 필터 설계: `docs/RSI_진입필터_작업지시.md`

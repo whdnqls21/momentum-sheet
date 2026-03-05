@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
+import StrategyRulesModal from '@/components/StrategyRulesModal';
 import type { EntrySignal } from '@/lib/rsi';
 
 interface SectorETFResult {
@@ -92,6 +93,7 @@ export default function SectorPage() {
   const [error, setError] = useState<string | null>(null);
   const [lockedTarget, setLockedTarget] = useState<LockedTarget | null>(null);
   const [rsiLoading, setRsiLoading] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   // DB에서 특정 날짜 결과 로드
   const loadDateData = useCallback(async (screenDate: string) => {
@@ -260,6 +262,9 @@ export default function SectorPage() {
                     }}
                   >
                     {rsiLoading ? '⏳ 조회 중...' : '🔄 RSI 새로고침'}
+                  </button>
+                  <button className="btn-ribbon" onClick={() => setRulesOpen(true)}>
+                    📋 전략 규칙
                   </button>
                   <select
                     value={selectedDate}
@@ -456,6 +461,46 @@ export default function SectorPage() {
           </>
         )}
       </div>
+
+      <StrategyRulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} title="📋 섹터로테이션 전략 규칙">
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <tbody>
+            <tr><td colSpan={2} style={RS.header}>기본 정보</td></tr>
+            <tr><td style={RS.label}>주기</td><td style={RS.val}>월 1회 (월말 스크리닝 → 첫 거래일 매수)</td></tr>
+            <tr><td style={RS.label}>종목풀</td><td style={RS.val}>7개 고정 섹터 ETF: KODEX 반도체, KODEX 자동차, KODEX 은행, KODEX 철강, KODEX 건설, TIGER 2차전지테마, KODEX 바이오</td></tr>
+
+            <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>선정 기준</td></tr>
+            <tr><td style={RS.label}>복합점수</td><td style={RS.val}>(1M수익률 x 0.6) + (3M수익률 x 0.4)</td></tr>
+            <tr><td style={RS.label}>3M 미달</td><td style={RS.val}>1M수익률만 사용 (처음 2개월)</td></tr>
+            <tr><td style={RS.label}>매수 종목</td><td style={RS.val}>복합점수 1위</td></tr>
+
+            <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>진입 필터 (RSI)</td></tr>
+            <tr><td style={RS.label}>RSI(3) &lt; 30</td><td style={RS.val}>진입 가능 (다음 날 08:50 매수)</td></tr>
+            <tr><td style={RS.label}>RSI(3) ≥ 30</td><td style={RS.val}>대기 (매일 장 마감 후 재확인)</td></tr>
+            <tr><td style={RS.label}>월말까지 미달</td><td style={RS.val}>해당 월 패스 (현금 유지)</td></tr>
+
+            <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매매 규칙</td></tr>
+            <tr><td style={RS.label}>매수금액</td><td style={RS.val}>200만원</td></tr>
+            <tr><td style={RS.label}>익절</td><td style={RS.val}>+7%</td></tr>
+            <tr><td style={RS.label}>손절</td><td style={RS.val}>-5%</td></tr>
+            <tr><td style={RS.label}>월말 미도달</td><td style={RS.val}>종가 매도</td></tr>
+          </tbody>
+        </table>
+      </StrategyRulesModal>
     </ExcelFrame>
   );
 }
+
+const RS = {
+  header: {
+    backgroundColor: '#d9e2f3', color: '#1f3864', fontWeight: 700 as const,
+    padding: '4px 6px', fontSize: 11, border: '1px solid #b4c6e7',
+  },
+  label: {
+    padding: '3px 6px', fontWeight: 600 as const, whiteSpace: 'nowrap' as const,
+    color: '#333', width: 100, border: '1px solid #e0e0e0', fontSize: 11,
+  },
+  val: {
+    padding: '3px 6px', color: '#555', border: '1px solid #e0e0e0', fontSize: 11,
+  },
+};

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
+import StrategyRulesModal from '@/components/StrategyRulesModal';
 import type { SwingStock, SwingScores } from '@/lib/types';
 
 interface HistoryOption {
@@ -97,6 +98,7 @@ export default function SwingPage() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   // DB에서 특정 날짜 결과 로드
   const loadDateData = useCallback(async (screenDate: string) => {
@@ -217,6 +219,9 @@ export default function SwingPage() {
                     style={loading ? { backgroundColor: '#e2efda' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
+                  </button>
+                  <button className="btn-ribbon" onClick={() => setRulesOpen(true)}>
+                    📋 전략 규칙
                   </button>
                   <select
                     value={selectedDate}
@@ -367,7 +372,53 @@ export default function SwingPage() {
           </>
         )}
       </div>
+
+      <StrategyRulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} title="📋 단기스윙 전략 규칙">
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <tbody>
+            <tr><td colSpan={2} style={{ ...RS.header }}>기본 정보</td></tr>
+            <tr><td style={RS.label}>주기</td><td style={RS.val}>주 1회 (금요일 스크리닝 → 월요일 매수)</td></tr>
+            <tr><td style={RS.label}>종목풀</td><td style={RS.val}>1차 고정 10종목 + 2차 동적 10종목 (API 자동수집)</td></tr>
+
+            <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>스코어링 (100점 만점)</td></tr>
+            <tr><td style={RS.label}>거래량 강도</td><td style={RS.val}>15점 — 5일avg / 20일avg ≥ 2.0 → 만점</td></tr>
+            <tr><td style={RS.label}>52주 고가 근접</td><td style={RS.val}>15점 — 현재가 / 52주고가 ≥ 95% → 만점</td></tr>
+            <tr><td style={RS.label}>5일선 이격</td><td style={RS.val}>10점 — 이격 0~3% → 만점</td></tr>
+            <tr><td style={RS.label}>정배열</td><td style={RS.val}>10점 — MA5 &gt; MA20 → 만점</td></tr>
+            <tr><td style={RS.label}>20일선 기울기</td><td style={RS.val}>10점 — 5일간 MA20 변화율 ≥ 1% → 만점</td></tr>
+            <tr><td style={RS.label}>외국인 수급</td><td style={RS.val}>15점 — 5일 중 순매수 5일 → 만점</td></tr>
+            <tr><td style={RS.label}>연속 양봉</td><td style={RS.val}>10점 — 5일 중 양봉 5일 → 만점</td></tr>
+            <tr><td style={RS.label}>이격도 적정성</td><td style={RS.val}>15점 — 현재가 / MA20 = 100~105% → 만점</td></tr>
+
+            <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>필터 조건</td></tr>
+            <tr><td colSpan={2} style={RS.val}>현재가 &gt; MA5 AND 20일선 기울기 &gt; 0 AND 거래량비율 ≥ 0.8</td></tr>
+
+            <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매수 조건</td></tr>
+            <tr><td colSpan={2} style={RS.val}>PASS + 60점 이상 + 전체 1위 (동점 시 1차 풀 우선)</td></tr>
+
+            <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매매 규칙</td></tr>
+            <tr><td style={RS.label}>매수금액</td><td style={RS.val}>200만원</td></tr>
+            <tr><td style={RS.label}>익절</td><td style={RS.val}>+7%</td></tr>
+            <tr><td style={RS.label}>손절</td><td style={RS.val}>-3%</td></tr>
+            <tr><td style={RS.label}>금요일 미청산</td><td style={RS.val}>종가 매도</td></tr>
+          </tbody>
+        </table>
+      </StrategyRulesModal>
     </ExcelFrame>
   );
 }
+
+const RS = {
+  header: {
+    backgroundColor: '#d9e2f3', color: '#1f3864', fontWeight: 700 as const,
+    padding: '4px 6px', fontSize: 11, border: '1px solid #b4c6e7',
+  },
+  label: {
+    padding: '3px 6px', fontWeight: 600 as const, whiteSpace: 'nowrap' as const,
+    color: '#333', width: 100, border: '1px solid #e0e0e0', fontSize: 11,
+  },
+  val: {
+    padding: '3px 6px', color: '#555', border: '1px solid #e0e0e0', fontSize: 11,
+  },
+};
 
