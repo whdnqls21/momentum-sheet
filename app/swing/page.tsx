@@ -25,11 +25,7 @@ const fmt = (n: number) => n.toLocaleString();
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 function fmtOption(h: HistoryOption): string {
   const d = new Date(h.screen_date + 'T00:00:00');
-  const md = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}(${DAY_NAMES[d.getDay()]})`;
-  const time = h.created_at
-    ? new Date(h.created_at).toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit' })
-    : '';
-  return `${md}${time ? ` ${time}` : ''}${h.selected_name ? ` → ${h.selected_name}` : ''}`;
+  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}(${DAY_NAMES[d.getDay()]})`;
 }
 
 function groupByWeek(items: HistoryOption[]): { label: string; items: HistoryOption[] }[] {

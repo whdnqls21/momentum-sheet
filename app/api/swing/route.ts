@@ -305,7 +305,10 @@ function getISOWeek(date: Date): { year: number; week: number; label: string } {
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return { year: d.getUTCFullYear(), week, label: `${d.getUTCFullYear()}년 ${week}주차` };
+  const month = date.getMonth() + 1;
+  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+  const weekOfMonth = Math.ceil((date.getDate() + firstDay.getDay()) / 7);
+  return { year: d.getUTCFullYear(), week, label: `${d.getUTCFullYear()}년 ${month}월 ${weekOfMonth}주차` };
 }
 
 // ── Supabase 저장 ──
