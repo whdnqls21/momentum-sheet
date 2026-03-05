@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
+import type { EntrySignal } from '@/lib/rsi';
 
 interface SectorETFResult {
   code: string;
@@ -11,6 +12,7 @@ interface SectorETFResult {
   m3Return: number | null;
   composite: number;
   rank: number;
+  rsi?: number | null;
   prices: { current: number; m1Ago: number; m3Ago: number | null };
 }
 
@@ -30,8 +32,23 @@ interface HistoryOption {
   created_at?: string;
 }
 
+interface LockedTarget {
+  name: string;
+  code: string;
+  rsi: number | null;
+  signal: EntrySignal;
+  month: string;
+  updatedAt?: string;
+}
+
 const fmt = (n: number) => n.toLocaleString();
 const fmtPct = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+
+function getEntrySignalLocal(rsi: number | null): EntrySignal {
+  if (rsi === null) return 'NO_DATA';
+  if (rsi < 30) return 'BUY';
+  return 'WAIT';
+}
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 function fmtOption(h: HistoryOption): string {
@@ -73,6 +90,8 @@ export default function SectorPage() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lockedTarget, setLockedTarget] = useState<LockedTarget | null>(null);
+  const [rsiLoading, setRsiLoading] = useState(false);
 
   // DB에서 특정 날짜 결과 로드
   const loadDateData = useCallback(async (screenDate: string) => {
@@ -92,6 +111,17 @@ export default function SectorPage() {
         month: { year: data.year, month: data.month_num, label: data.month_label || '' },
         screenDate: data.created_at || data.screen_date || '',
       });
+      // 이력 로드 시 1위 ETF를 lockedTarget으로 설정
+      if (topEtf && data.selected_ticker) {
+        const monthStr = `${data.year}-${String(data.month_num).padStart(2, '0')}`;
+        setLockedTarget({
+          name: data.selected_name || topEtf.name,
+          code: data.selected_ticker,
+          rsi: topEtf.rsi ?? null,
+          signal: getEntrySignalLocal(topEtf.rsi ?? null),
+          month: monthStr,
+        });
+      }
     } catch {
       setResult(null);
     } finally {
@@ -122,7 +152,7 @@ export default function SectorPage() {
       .catch(() => {});
   }, [loadDateData]);
 
-  // 스크리닝 실행
+  // 섹터 스크리닝 실행
   const handleRun = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -139,13 +169,26 @@ export default function SectorPage() {
       // 1) API 응답을 바로 테이블에 렌더링
       setResult({ ...data, screenDate: new Date().toISOString() });
 
-      // 2) 이력 드롭다운을 서버에서 다시 fetch
+      // 2) 1위 ETF를 lockedTarget으로 저장
+      if (data.selected && data.etfs.length > 0) {
+        const topEtf = [...data.etfs].sort((a, b) => b.composite - a.composite)[0];
+        const monthStr = `${data.month.year}-${String(data.month.month).padStart(2, '0')}`;
+        setLockedTarget({
+          name: data.selected.name,
+          code: data.selected.code,
+          rsi: topEtf.rsi ?? null,
+          signal: getEntrySignalLocal(topEtf.rsi ?? null),
+          month: monthStr,
+          updatedAt: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+        });
+      }
+
+      // 3) 이력 드롭다운을 서버에서 다시 fetch
       const histRes = await fetch('/api/sector/history', { cache: 'no-store' });
       if (histRes.ok) {
         const histData = await histRes.json();
         if (Array.isArray(histData) && histData.length > 0) {
           setHistory(histData);
-          // 3) 방금 실행한 날짜를 드롭다운에서 자동 선택 (최신 항목)
           setSelectedDate(histData[0].screen_date);
         }
       }
@@ -155,6 +198,27 @@ export default function SectorPage() {
       setLoading(false);
     }
   }, []);
+
+  // RSI 새로고침 (1위 ETF만)
+  const handleRsiRefresh = useCallback(async () => {
+    if (!lockedTarget) return;
+    setRsiLoading(true);
+    try {
+      const res = await fetch(`/api/sector/rsi?code=${lockedTarget.code}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('RSI 새로고침 실패');
+      const data = await res.json();
+      setLockedTarget((prev) => prev ? {
+        ...prev,
+        rsi: data.rsi,
+        signal: data.signal,
+        updatedAt: data.updatedAt,
+      } : null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setRsiLoading(false);
+    }
+  }, [lockedTarget]);
 
   const etfs = result?.etfs || [];
   const sorted = [...etfs].sort((a, b) => b.composite - a.composite);
@@ -177,14 +241,25 @@ export default function SectorPage() {
             <tr>
               <td style={S.rowNum}>1</td>
               <td style={{ ...S.tdL, padding: '6px 8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', flexWrap: 'wrap' }}>
                   <button
                     className="btn-ribbon"
                     onClick={handleRun}
                     disabled={loading}
                     style={loading ? { backgroundColor: '#e2efda' } : {}}
                   >
-                    {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
+                    {loading ? '⏳ 스크리닝 중...' : '▶ 섹터 스크리닝'}
+                  </button>
+                  <button
+                    className="btn-ribbon"
+                    onClick={handleRsiRefresh}
+                    disabled={rsiLoading || !lockedTarget || loading}
+                    style={{
+                      ...(rsiLoading ? { backgroundColor: '#e2efda' } : {}),
+                      ...(!lockedTarget ? { opacity: 0.5 } : {}),
+                    }}
+                  >
+                    {rsiLoading ? '⏳ 조회 중...' : '🔄 RSI 새로고침'}
                   </button>
                   <select
                     value={selectedDate}
@@ -233,13 +308,59 @@ export default function SectorPage() {
 
         {result && (
           <>
-            {/* ── 매수 종목 ── */}
-            {result.selected && (
+            {/* ── 진입 판단 카드 ── */}
+            {lockedTarget && (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
                   <tr>
                     <td style={{ ...S.section, backgroundColor: '#FFFDE7', color: '#bf8f00' }} colSpan={2}>
-                      이번 달 매수 종목: {result.selected.name} (복합점수: {result.selected.composite})
+                      📌 이번 달 진입 대상 ({lockedTarget.month.replace('-', '년 ')}월)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={S.rowNum} />
+                    <td style={{ ...S.tdL, padding: '10px 12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ fontWeight: 700, fontSize: 12 }}>
+                          {lockedTarget.name} ({lockedTarget.code})
+                        </div>
+                        <div style={{ fontSize: 11, color: '#555' }}>
+                          RSI(3): {lockedTarget.rsi !== null ? lockedTarget.rsi.toFixed(1) : '—'}
+                          {lockedTarget.updatedAt && (
+                            <span style={{ color: '#999', marginLeft: 8 }}>({lockedTarget.updatedAt} 기준)</span>
+                          )}
+                        </div>
+                        {lockedTarget.signal === 'BUY' && (
+                          <div style={{
+                            display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                            backgroundColor: '#c6efce', color: '#006100', fontWeight: 700, fontSize: 11,
+                            width: 'fit-content',
+                          }}>
+                            ✅ 진입 가능 — 내일 08:50 매수
+                          </div>
+                        )}
+                        {lockedTarget.signal === 'WAIT' && (
+                          <div style={{
+                            display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                            backgroundColor: '#FFF3E0', color: '#e65100', fontWeight: 700, fontSize: 11,
+                            width: 'fit-content',
+                          }}>
+                            ⏳ 대기 — RSI {lockedTarget.rsi !== null ? lockedTarget.rsi.toFixed(1) : '—'}, 내일 장 마감 후 재확인
+                          </div>
+                        )}
+                        {lockedTarget.signal === 'NO_DATA' && (
+                          <div style={{
+                            display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                            backgroundColor: '#f5f5f5', color: '#888', fontWeight: 700, fontSize: 11,
+                            width: 'fit-content',
+                          }}>
+                            데이터 없음
+                          </div>
+                        )}
+                        <div style={{ fontSize: 9, color: '#999' }}>
+                          기준: RSI(3) &lt; 30 시 진입 | 월말까지 미달 시 해당 월 패스
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -251,7 +372,7 @@ export default function SectorPage() {
               <table style={{ borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr>
-                    <th style={{ ...S.section, textAlign: 'left' }} colSpan={9}>
+                    <th style={{ ...S.section, textAlign: 'left' }} colSpan={10}>
                       섹터 ETF 순위
                     </th>
                   </tr>
@@ -264,6 +385,7 @@ export default function SectorPage() {
                     <th style={{ ...S.th, backgroundColor: '#dce6f1' }} colSpan={2}>1M</th>
                     <th style={{ ...S.th, backgroundColor: '#dce6f1' }} colSpan={2}>3M</th>
                     <th style={S.th} rowSpan={2}>복합점수</th>
+                    <th style={S.th} rowSpan={2}>RSI(3)</th>
                   </tr>
                   {/* ── 서브 헤더 ── */}
                   <tr>
@@ -282,7 +404,10 @@ export default function SectorPage() {
                       <tr key={etf.code} style={{ backgroundColor: rowBg }}>
                         <td style={{ ...S.tdC, fontWeight: isTop ? 700 : 400 }}>{i + 1}</td>
                         <td style={{ ...S.tdC, fontFamily: 'monospace', fontSize: 10 }}>{etf.code}</td>
-                        <td style={{ ...S.tdL, fontWeight: isTop ? 700 : 400 }}>{etf.name}</td>
+                        <td style={{ ...S.tdL, fontWeight: isTop ? 700 : 400 }}>
+                          {etf.name}
+                          {isTop && <span style={{ fontSize: 9, color: '#bf8f00', marginLeft: 4 }}>📌</span>}
+                        </td>
                         <td style={S.td}>{etf.price > 0 ? fmt(etf.price) : '—'}</td>
                         <td style={{ ...S.td, backgroundColor: '#E3F2FD' }}>
                           {etf.prices?.m1Ago ? fmt(etf.prices.m1Ago) : '—'}
@@ -298,6 +423,13 @@ export default function SectorPage() {
                         </td>
                         <td style={{ ...S.td, fontWeight: 700, color: pnlColor(etf.composite) }}>
                           {etf.composite.toFixed(2)}
+                        </td>
+                        <td style={{
+                          ...S.td,
+                          fontWeight: 600,
+                          color: etf.rsi != null && etf.rsi < 30 ? '#006100' : etf.rsi != null && etf.rsi >= 70 ? '#9c0006' : '#333',
+                        }}>
+                          {etf.rsi != null ? etf.rsi.toFixed(1) : '—'}
                         </td>
                       </tr>
                     );
@@ -316,7 +448,7 @@ export default function SectorPage() {
                 </tr>
                 <tr>
                   <td style={{ ...S.tdL, color: '#888', fontSize: 10, padding: '2px 8px 6px' }}>
-                    복합점수 = (1M수익률 × 0.6) + (3M수익률 × 0.4)
+                    복합점수 = (1M수익률 × 0.6) + (3M수익률 × 0.4) | 진입: RSI(3) &lt; 30
                   </td>
                 </tr>
               </tbody>

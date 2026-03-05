@@ -3,6 +3,7 @@ import { getToken, invalidateToken, wasTokenRecentlyIssued } from '@/lib/kis-aut
 import { acquireSlot } from '@/lib/rate-limiter';
 import { supabase } from '@/lib/supabase';
 import { KIS_BASE_URL, KIS_TR_IDS, SECTOR_ETFS } from '@/lib/constants';
+import { calculateRSI } from '@/lib/rsi';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,7 @@ interface SectorResult {
   m3Return: number | null;
   composite: number;
   rank: number;
+  rsi: number | null;
   prices: { current: number; m1Ago: number; m3Ago: number | null };
 }
 
@@ -105,6 +107,8 @@ export async function GET() {
           ? m1Return * 0.6 + m3Return * 0.4
           : m1Return;
 
+        const rsi = calculateRSI(dailyList);
+
         results.push({
           code: etf.code,
           name: etf.name,
@@ -113,6 +117,7 @@ export async function GET() {
           m3Return: m3Return !== null ? round2(m3Return) : null,
           composite: round2(composite),
           rank: 0,
+          rsi: rsi !== null ? round1(rsi) : null,
           prices: { current: currentPrice, m1Ago: m1Price, m3Ago: m3Price || null },
         });
       } catch (err: any) {
@@ -125,6 +130,7 @@ export async function GET() {
           m3Return: null,
           composite: 0,
           rank: 0,
+          rsi: null,
           prices: { current: 0, m1Ago: 0, m3Ago: null },
         });
       }
@@ -174,4 +180,8 @@ export async function GET() {
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
+}
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
 }
