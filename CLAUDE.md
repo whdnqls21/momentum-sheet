@@ -108,6 +108,11 @@ custtype: P
   - 1M수익률 = (현재가 - 20거래일전 종가) / 20거래일전 종가 × 100
   - 3M수익률 = (현재가 - 60거래일전 종가) / 60거래일전 종가 × 100
   - 3M 데이터 없으면 1M만 사용
+- **RSI(3) 진입 필터**: 1위 ETF 선정 후 RSI(3) < 30 눌림목 확인 후 진입
+  - RSI(3) < 30 → BUY (다음 날 08:50 매수)
+  - RSI(3) >= 30 → WAIT (다음 날 장 마감 후 재확인)
+  - 월말까지 미달 → PASS (해당 월 패스, 현금 유지)
+  - RSI 계산: Wilder's Smoothing 방식, 20일치 데이터 사용
 - **매매규칙**: 200만원 매수, 익절 +7%, 손절 -5%, 월말 미도달 시 종가 매도
 
 ### 트랙 B: 단기스윙 (주간)
@@ -254,30 +259,35 @@ SUPABASE_ANON_KEY=...
 ```
 momentum-sheet/
 ├── app/
-│   ├── page.tsx              # 잔고현황 (홈)
-│   ├── swing/page.tsx        # 단기스윙 스크리닝
-│   ├── sector/page.tsx       # 섹터로테이션
-│   ├── journal/page.tsx      # 매매일지
-│   ├── stats/page.tsx        # 성과분석
+│   ├── page.tsx                  # 잔고현황 (홈)
+│   ├── swing/page.tsx            # 단기스윙 스크리닝
+│   ├── sector/page.tsx           # 섹터로테이션 + RSI 진입 필터
+│   ├── journal/page.tsx          # 매매일지
+│   ├── stats/page.tsx            # 성과분석
 │   ├── api/
-│   │   ├── balance/route.ts  # 잔고조회
-│   │   ├── swing/route.ts    # 스윙 스크리닝
-│   │   ├── sector/route.ts   # 섹터 스크리닝
-│   │   └── journal/route.ts  # 매매일지 CRUD
+│   │   ├── balance/route.ts      # 잔고조회
+│   │   ├── swing/route.ts        # 스윙 스크리닝
+│   │   ├── sector/
+│   │   │   ├── route.ts          # 섹터 스크리닝 (모멘텀 + RSI)
+│   │   │   ├── history/route.ts  # 섹터 이력 조회
+│   │   │   └── rsi/route.ts      # RSI 새로고침 (1위 ETF 전용)
+│   │   └── journal/route.ts      # 매매일지 CRUD
 │   ├── layout.tsx
 │   └── globals.css
 ├── components/
-│   └── ExcelFrame.tsx        # Excel 프레임 (리본바, 수식줄, 시트탭, 상태바)
+│   └── ExcelFrame.tsx            # Excel 프레임 (리본바, 수식줄, 시트탭, 상태바)
 ├── lib/
-│   ├── types.ts              # 공유 타입
-│   ├── constants.ts          # 종목풀, 매매규칙, TR_ID
-│   ├── kis-auth.ts           # 토큰 관리 (Supabase DB 기반, 캐시 없음)
-│   ├── kis-api.ts            # API 클라이언트
-│   ├── rate-limiter.ts       # 초당 20회 제한
-│   └── supabase.ts           # Supabase 클라이언트
+│   ├── types.ts                  # 공유 타입
+│   ├── constants.ts              # 종목풀, 매매규칙, TR_ID
+│   ├── kis-auth.ts               # 토큰 관리 (Supabase DB 기반, 캐시 없음)
+│   ├── kis-api.ts                # API 클라이언트
+│   ├── rate-limiter.ts           # 초당 20회 제한
+│   ├── rsi.ts                    # RSI(3) 계산 + 진입 신호 판단
+│   └── supabase.ts               # Supabase 클라이언트
 └── docs/
-    ├── SPEC.md               # 기능명세서
-    └── supabase-setup.sql    # DB 셋업 SQL
+    ├── SPEC.md                   # 기능명세서
+    ├── supabase-setup.sql        # DB 셋업 SQL
+    └── RSI_진입필터_작업지시.md    # RSI 진입 필터 설계 문서
 ```
 
 ---
@@ -292,7 +302,8 @@ momentum-sheet/
 | 4 | 매매일지 (Supabase CRUD) | ✅ 완료 |
 | 5 | 성과분석 차트 | ✅ 완료 |
 | 6 | PWA + 알림 | ✅ 완료 |
-| 7 | Vercel 배포 | 대기 |
+| 7 | RSI(3) 진입 필터 | ✅ 완료 |
+| 8 | Vercel 배포 | 대기 |
 
 ---
 
