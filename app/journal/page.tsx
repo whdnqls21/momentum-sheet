@@ -125,12 +125,16 @@ export default function JournalPage() {
           <>
             {/* ── 보유 중 ── */}
             {(statusFilter === '' || statusFilter === 'open') && (
-              <OpenTable entries={open} onSell={setSellTarget} onDelete={handleDelete} />
+              <div style={{ overflowX: 'auto' }}>
+                <OpenTable entries={open} onSell={setSellTarget} onDelete={handleDelete} />
+              </div>
             )}
 
             {/* ── 청산 완료 ── */}
             {(statusFilter === '' || statusFilter === 'closed') && (
-              <ClosedTable entries={closed} onDelete={handleDelete} />
+              <div style={{ overflowX: 'auto' }}>
+                <ClosedTable entries={closed} onDelete={handleDelete} />
+              </div>
             )}
 
             {/* ── 성과 요약 ── */}

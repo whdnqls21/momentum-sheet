@@ -121,6 +121,7 @@ export default function AnalysisPage() {
     <ExcelFrame statusItems={statusItems}>
       <div style={{ padding: 0 }}>
         {/* ── 전체 요약 ── */}
+        <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr><td style={S.section} colSpan={10}>전체 요약</td></tr>
@@ -146,8 +147,10 @@ export default function AnalysisPage() {
             </tr>
           </tbody>
         </table>
+        </div>
 
         {/* ── 전략별 비교 ── */}
+        <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr><th style={{ ...S.section, textAlign: 'left' }} colSpan={9}>전략별 비교</th></tr>
@@ -182,8 +185,10 @@ export default function AnalysisPage() {
             )}
           </tbody>
         </table>
+        </div>
 
         {/* ── 청산 사유 분석 ── */}
+        <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr><th style={{ ...S.section, textAlign: 'left' }} colSpan={5}>청산 사유 분석</th></tr>
@@ -207,6 +212,7 @@ export default function AnalysisPage() {
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* ── 차트 영역 ── */}
         <AnalysisCharts

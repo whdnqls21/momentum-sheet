@@ -48,7 +48,7 @@ export default function ExcelFrame({ children, statusItems, onRefresh, refreshin
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', maxWidth: '100vw', overflow: 'hidden' }}>
       {/* ── Ribbon ── */}
       <div style={{ backgroundColor: '#217346', borderBottom: '1px solid #1a5c35' }}>
         {/* Ribbon tabs */}
@@ -160,7 +160,7 @@ export default function ExcelFrame({ children, statusItems, onRefresh, refreshin
       </div>
 
       {/* ── Workspace ── */}
-      <div style={{ flex: 1, overflow: 'auto', backgroundColor: '#fff' }}>{children}</div>
+      <div className="workspace" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#fff' }}>{children}</div>
 
       {/* ── Sheet Tabs (Desktop) ── */}
       <div className="desktop-sheet-tabs"

@@ -246,11 +246,12 @@ export default function SectorPage() {
     <ExcelFrame statusItems={statusItems}>
       <div style={{ padding: 0 }}>
         {/* ── 컨트롤 영역 ── */}
+        <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
               <td style={S.section} colSpan={2}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
                   <span>섹터로테이션 스크리닝</span>
                   <button
                     onClick={() => setRulesOpen(true)}
@@ -322,6 +323,7 @@ export default function SectorPage() {
             </tr>
           </tbody>
         </table>
+        </div>
 
         {(!sectorTimeStatus.allowed || !rsiTimeStatus.allowed) && (
           <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10 }}>
@@ -345,6 +347,7 @@ export default function SectorPage() {
           <>
             {/* ── 진입 판단 카드 ── */}
             {lockedTarget && (
+              <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
                   <tr>
@@ -400,6 +403,7 @@ export default function SectorPage() {
                   </tr>
                 </tbody>
               </table>
+              </div>
             )}
 
             {/* ── 결과 테이블 ── */}
@@ -474,6 +478,7 @@ export default function SectorPage() {
             </div>
 
             {/* ── 매매규칙 ── */}
+            <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 0 }}>
               <tbody>
                 <tr>
@@ -488,6 +493,7 @@ export default function SectorPage() {
                 </tr>
               </tbody>
             </table>
+            </div>
           </>
         )}
       </div>

@@ -290,6 +290,7 @@ momentum-sheet/
 │   │   │   ├── history/route.ts  # 볼린저 이력
 │   │   │   ├── exit/route.ts     # 볼린저 매도 신호 확인
 │   │   │   └── price/route.ts    # 볼린저 장중 현재가 조회
+│   │   ├── routine/route.ts       # 오늘의 루틴 (보유상태+스크리닝+시간 기반)
 │   │   └── journal/route.ts      # 매매일지 CRUD
 │   ├── layout.tsx
 │   └── globals.css
@@ -329,6 +330,8 @@ momentum-sheet/
 | 10 | 볼린저밴드 %B 전략 | ✅ 완료 |
 | 11 | 볼린저 매도 신호 모니터링 | ✅ 완료 |
 | 12 | 볼린저 장중 현재가 확인 | ✅ 완료 |
+| 13 | 대시보드 홈 확장 (자금 배분 + 루틴) | ✅ 완료 |
+| 14 | 모바일 UI 개선 | ✅ 완료 |
 
 ---
 

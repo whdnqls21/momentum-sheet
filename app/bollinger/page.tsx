@@ -267,11 +267,12 @@ export default function BollingerPage() {
     <ExcelFrame statusItems={statusItems}>
       <div style={{ padding: 0 }}>
         {/* ── 컨트롤 영역 ── */}
+        <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
               <td style={S.section} colSpan={2}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
                   <span>볼린저밴드 %B 스크리닝</span>
                   <button
                     onClick={() => setRulesOpen(true)}
@@ -344,6 +345,7 @@ export default function BollingerPage() {
             </tr>
           </tbody>
         </table>
+        </div>
 
         {!timeStatus.allowed && (
           <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10 }}>
@@ -377,6 +379,7 @@ export default function BollingerPage() {
           const headerIcon = isStopNear ? '⚠️' : isAboveMa20 ? '🔔' : '📈';
 
           return (
+            <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <tbody>
                 <tr>
@@ -519,6 +522,7 @@ export default function BollingerPage() {
                 </tr>
               </tbody>
             </table>
+            </div>
           );
         })()}
 
@@ -526,6 +530,7 @@ export default function BollingerPage() {
           <>
             {/* ── 매수 신호 카드 ── */}
             {result.buyCandidate ? (
+              <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
                   <tr>
@@ -561,7 +566,9 @@ export default function BollingerPage() {
                   </tr>
                 </tbody>
               </table>
+              </div>
             ) : (
+              <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
                   <tr>
@@ -581,10 +588,12 @@ export default function BollingerPage() {
                   </tr>
                 </tbody>
               </table>
+              </div>
             )}
 
             {/* ── WATCH 종목 ── */}
             {watchList.length > 0 && (
+              <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
                   {watchList.map(w => (
@@ -596,6 +605,7 @@ export default function BollingerPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
 
             {/* ── 스크리닝 테이블 ── */}
@@ -672,6 +682,7 @@ export default function BollingerPage() {
             </div>
 
             {/* ── 하단 정보 ── */}
+            <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 0 }}>
               <tbody>
                 <tr>
@@ -691,6 +702,7 @@ export default function BollingerPage() {
                 </tr>
               </tbody>
             </table>
+            </div>
           </>
         )}
       </div>
