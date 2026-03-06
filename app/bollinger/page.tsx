@@ -730,8 +730,9 @@ export default function BollingerPage() {
             <tr><td colSpan={2} style={RS.val}>복수 신호 시 %B 가장 낮은 종목 1개 | 익일 08:50 시장가</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>청산 규칙</td></tr>
-            <tr><td style={RS.label}>익절</td><td style={RS.val}>%B ≥ 0.5 확인 → 익일 08:50 시장가 매도</td></tr>
-            <tr><td style={RS.label}>손절</td><td style={RS.val}>매수가 대비 -5% (매수 당일 즉시 등록)</td></tr>
+            <tr><td style={RS.label}>장중 매도</td><td style={RS.val}>현재가 ≥ MA20 돌파 시 즉시 시장가 매도 (한투앱)</td></tr>
+            <tr><td style={RS.label}>익절</td><td style={RS.val}>장 마감 후 %B ≥ 0.5 확인 → 익일 08:50 시장가 매도</td></tr>
+            <tr><td style={RS.label}>손절</td><td style={RS.val}>매수가 대비 -5% (매수 당일 즉시 지정가 등록)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>서킷브레이커</td></tr>
             <tr><td style={RS.label}>2연속 손절</td><td style={RS.val}>2주 매매 중단</td></tr>

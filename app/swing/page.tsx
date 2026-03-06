@@ -430,7 +430,7 @@ export default function SwingPage() {
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매매 규칙</td></tr>
             <tr><td style={RS.label}>매수금액</td><td style={RS.val}>200만원</td></tr>
             <tr><td style={RS.label}>익절</td><td style={RS.val}>+7%</td></tr>
-            <tr><td style={RS.label}>손절</td><td style={RS.val}>-3%</td></tr>
+            <tr><td style={RS.label}>손절</td><td style={RS.val}>매수가 대비 -3% (매수 당일 즉시 지정가 등록)</td></tr>
             <tr><td style={RS.label}>금요일 미청산</td><td style={RS.val}>종가 매도</td></tr>
           </tbody>
         </table>
