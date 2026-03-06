@@ -246,20 +246,77 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
 
           {/* 매수일 */}
           <TimeBlock time="매수일 08:50">
-            <ActionCard borderColor="#bf8f00" bg="#FFFDE7">
-              <div style={{ fontWeight: 700 }}>① 매수 자금 결정</div>
-              <div style={{ paddingLeft: 12 }}>
-                <Tag type="sw" label="스윙" /> → 37.5% (고정)<br />
-                <Tag type="sec" label="섹터" /> → 볼린저 보유? YES 31.25% / NO 50%<br />
-                <Tag type="bb" label="볼린저" /> → 섹터 보유? YES 31.25% / NO 50%
-              </div>
-              <div style={{ fontWeight: 700, marginTop: 6 }}>② 한투앱 시장가 매수 (08:50 접수 → 09:00 체결)</div>
-              <div style={{ fontWeight: 700, marginTop: 4 }}>③ 즉시 손절 지정가 등록</div>
-              <div style={{ paddingLeft: 12 }}>
-                <Tag type="sw" label="스윙" /> ×0.97 | <Tag type="sec" label="섹터" /> ×0.95 | <Tag type="bb" label="볼린저" /> ×0.95
-              </div>
-              <div style={{ fontWeight: 700, marginTop: 4 }}>④ 매매일지 매수 기록</div>
-            </ActionCard>
+            <BranchBlock
+              question="전일 스크리닝 완료?"
+              leftLabel="미완료"
+              rightLabel="완료"
+              left={
+                <ActionCard borderColor="#9c0006" bg="#FFEBEE">
+                  <div style={{ fontWeight: 700, color: '#9c0006' }}>⚠ 스크리닝 미실행</div>
+                  <div style={{ marginTop: 4 }}>매수 불가</div>
+                  <div style={{ marginTop: 2, color: '#666' }}>오늘 장 마감 후 스크리닝 실행</div>
+                </ActionCard>
+              }
+              right={
+                <BranchBlock
+                  question="매수 신호 있음?"
+                  leftLabel="없음"
+                  rightLabel="있음"
+                  left={
+                    <div style={{ fontSize: 11, color: '#888', padding: '6px 4px' }}>
+                      매수 없음<br />일반 루틴 진행
+                    </div>
+                  }
+                  right={
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 11, marginBottom: 6 }}>어떤 전략?</div>
+                      <div className="branch-grid-3col" style={{ gap: 4 }}>
+                        {/* 스윙 */}
+                        <div style={{ border: '1px solid #E65100', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ backgroundColor: '#FFF3E0', color: '#E65100', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
+                            스윙
+                          </div>
+                          <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
+                            37.5% (고정)<br />
+                            시장가 매수<br />
+                            손절 ×0.97
+                          </div>
+                        </div>
+                        {/* 섹터 */}
+                        <div style={{ border: '1px solid #2E7D32', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ backgroundColor: '#E8F5E9', color: '#2E7D32', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
+                            섹터
+                          </div>
+                          <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
+                            볼 보유?<br />
+                            Y→31.25%<br />
+                            N→50%<br />
+                            손절 ×0.95
+                          </div>
+                        </div>
+                        {/* 볼린저 */}
+                        <div style={{ border: '1px solid #283593', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ backgroundColor: '#E8EAF6', color: '#283593', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
+                            볼린저
+                          </div>
+                          <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
+                            섹 보유?<br />
+                            Y→31.25%<br />
+                            N→50%<br />
+                            손절 ×0.95
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 6, fontSize: 10, color: '#555', borderTop: '1px solid #e0e0e0', paddingTop: 4 }}>
+                        한투앱 시장가 매수 (08:50 접수)<br />
+                        즉시 손절 지정가 등록<br />
+                        매매일지 매수 기록
+                      </div>
+                    </div>
+                  }
+                />
+              }
+            />
           </TimeBlock>
 
           {/* 장중 */}

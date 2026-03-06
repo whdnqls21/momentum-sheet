@@ -155,6 +155,10 @@ html, body {
 .branch-col-left {
   border-right: 2px dashed #ccc;
 }
+.branch-grid-3col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
 @media (max-width: 520px) {
   .branch-grid {
     grid-template-columns: 1fr;
@@ -162,6 +166,9 @@ html, body {
   .branch-col-left {
     border-right: none;
     border-bottom: 2px dashed #ccc;
+  }
+  .branch-grid-3col {
+    grid-template-columns: 1fr;
   }
 }
 
