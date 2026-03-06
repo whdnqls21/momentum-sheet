@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface Sheet {
@@ -40,6 +40,14 @@ export default function ExcelFrame({ children, statusItems, onRefresh, refreshin
   const pathname = usePathname();
 
   const current = SHEETS.find((s) => s.path === pathname) || SHEETS[0];
+
+  const [clock, setClock] = useState('');
+  useEffect(() => {
+    const update = () => setClock(new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }));
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSheetClick = useCallback(
     (sheet: Sheet) => {
@@ -99,7 +107,7 @@ export default function ExcelFrame({ children, statusItems, onRefresh, refreshin
           )}
           {ribbonExtra}
           <span style={{ fontSize: 10, color: '#888' }}>
-            {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+            {clock}
           </span>
           <span style={{ fontSize: 10, color: '#888', marginLeft: 'auto' }}>
             {current.description}
