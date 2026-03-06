@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
 import StrategyRulesModal from '@/components/StrategyRulesModal';
+import { canScreenSwing } from '@/lib/tradingHours';
 import type { SwingStock, SwingScores } from '@/lib/types';
 
 interface HistoryOption {
@@ -99,6 +100,14 @@ export default function SwingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [timeStatus, setTimeStatus] = useState(canScreenSwing());
+
+  // 1분마다 시간 체크
+  useEffect(() => {
+    const check = () => setTimeStatus(canScreenSwing());
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // DB에서 특정 날짜 결과 로드
   const loadDateData = useCallback(async (screenDate: string) => {
@@ -227,8 +236,9 @@ export default function SwingPage() {
                   <button
                     className="btn-ribbon"
                     onClick={handleRun}
-                    disabled={loading}
-                    style={loading ? { backgroundColor: '#e2efda' } : {}}
+                    disabled={loading || !timeStatus.allowed}
+                    title={timeStatus.reason}
+                    style={loading ? { backgroundColor: '#e2efda' } : !timeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
                   </button>
@@ -264,6 +274,12 @@ export default function SwingPage() {
             </tr>
           </tbody>
         </table>
+
+        {!timeStatus.allowed && (
+          <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10 }}>
+            ⚠ {timeStatus.reason}
+          </div>
+        )}
 
         {error && (
           <div style={{ padding: '8px 12px', color: '#9c0006', fontWeight: 700, fontSize: 11 }}>

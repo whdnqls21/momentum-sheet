@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
 import StrategyRulesModal from '@/components/StrategyRulesModal';
+import { canScreenSector, canRefreshRSI } from '@/lib/tradingHours';
 import type { EntrySignal } from '@/lib/rsi';
 
 interface SectorETFResult {
@@ -94,6 +95,18 @@ export default function SectorPage() {
   const [lockedTarget, setLockedTarget] = useState<LockedTarget | null>(null);
   const [rsiLoading, setRsiLoading] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [sectorTimeStatus, setSectorTimeStatus] = useState(canScreenSector());
+  const [rsiTimeStatus, setRsiTimeStatus] = useState(canRefreshRSI());
+
+  // 1분마다 시간 체크
+  useEffect(() => {
+    const check = () => {
+      setSectorTimeStatus(canScreenSector());
+      setRsiTimeStatus(canRefreshRSI());
+    };
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // DB에서 특정 날짜 결과 로드
   const loadDateData = useCallback(async (screenDate: string) => {
@@ -259,18 +272,20 @@ export default function SectorPage() {
                   <button
                     className="btn-ribbon"
                     onClick={handleRun}
-                    disabled={loading}
-                    style={loading ? { backgroundColor: '#e2efda' } : {}}
+                    disabled={loading || !sectorTimeStatus.allowed}
+                    title={sectorTimeStatus.reason}
+                    style={loading ? { backgroundColor: '#e2efda' } : !sectorTimeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 섹터 스크리닝'}
                   </button>
                   <button
                     className="btn-ribbon"
                     onClick={handleRsiRefresh}
-                    disabled={rsiLoading || !lockedTarget || loading}
+                    disabled={rsiLoading || !lockedTarget || loading || !rsiTimeStatus.allowed}
+                    title={rsiTimeStatus.reason}
                     style={{
                       ...(rsiLoading ? { backgroundColor: '#e2efda' } : {}),
-                      ...(!lockedTarget ? { opacity: 0.5 } : {}),
+                      ...(!lockedTarget || !rsiTimeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
                     }}
                   >
                     {rsiLoading ? '⏳ 조회 중...' : '🔄 RSI 새로고침'}
@@ -307,6 +322,12 @@ export default function SectorPage() {
             </tr>
           </tbody>
         </table>
+
+        {(!sectorTimeStatus.allowed || !rsiTimeStatus.allowed) && (
+          <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10 }}>
+            ⚠ {sectorTimeStatus.reason || rsiTimeStatus.reason}
+          </div>
+        )}
 
         {error && (
           <div style={{ padding: '8px 12px', color: '#9c0006', fontWeight: 700, fontSize: 11 }}>

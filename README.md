@@ -89,6 +89,7 @@ momentum-sheet/
 │   ├── kis-api.ts                ← API 클라이언트
 │   ├── rate-limiter.ts           ← 초당 20회 제한
 │   ├── rsi.ts                    ← RSI(3) 계산 + 진입 신호 판단
+│   ├── tradingHours.ts           ← 스크리닝 시간 제한 (KST 기준)
 │   └── supabase.ts               ← Supabase 클라이언트
 ├── docs/
 │   ├── SPEC.md                   ← 기능명세서
@@ -121,6 +122,7 @@ RSI(3) >= 30 → WAIT (다음 날 장 마감 후 재확인)
 | 6 | PWA + 알림 | ✅ 완료 |
 | 7 | RSI(3) 진입 필터 | ✅ 완료 |
 | 8 | Vercel 배포 | ✅ 완료 |
+| 9 | 스크리닝 시간 제한 | ✅ 완료 |
 
 ## 문서
 
