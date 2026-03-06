@@ -152,6 +152,9 @@ html, body {
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
+.branch-grid-wide {
+  grid-template-columns: 1fr 2fr;
+}
 .branch-col-left {
   border-right: 2px dashed #ccc;
 }
@@ -160,7 +163,8 @@ html, body {
   grid-template-columns: 1fr 1fr 1fr;
 }
 @media (max-width: 520px) {
-  .branch-grid {
+  .branch-grid,
+  .branch-grid-wide {
     grid-template-columns: 1fr;
   }
   .branch-col-left {

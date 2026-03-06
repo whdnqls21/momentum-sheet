@@ -83,12 +83,13 @@ function TimeBlock({ time, children }: { time: string; children: React.ReactNode
 }
 
 // ── 좌우 분기 블록 ──
-function BranchBlock({ question, leftLabel, rightLabel, left, right }: {
+function BranchBlock({ question, leftLabel, rightLabel, left, right, wideRight }: {
   question: string;
   leftLabel: string;
   rightLabel: string;
   left: React.ReactNode;
   right: React.ReactNode;
+  wideRight?: boolean;
 }) {
   return (
     <div style={{ border: '1px solid #d4d4d4', borderRadius: 4, overflow: 'hidden' }}>
@@ -100,7 +101,7 @@ function BranchBlock({ question, leftLabel, rightLabel, left, right }: {
         {question}
       </div>
       {/* 좌우 컬럼 */}
-      <div className="branch-grid">
+      <div className={wideRight ? 'branch-grid branch-grid-wide' : 'branch-grid'}>
         <div className="branch-col-left" style={{ padding: 8 }}>
           <div style={{
             backgroundColor: '#e0e0e0', color: '#555', padding: '2px 8px', borderRadius: 2,
@@ -250,6 +251,7 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
               question="전일 스크리닝 완료?"
               leftLabel="미완료"
               rightLabel="완료"
+              wideRight
               left={
                 <ActionCard borderColor="#9c0006" bg="#FFEBEE">
                   <div style={{ fontWeight: 700, color: '#9c0006' }}>⚠ 스크리닝 미실행</div>
@@ -262,6 +264,7 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
                   question="매수 신호 있음?"
                   leftLabel="없음"
                   rightLabel="있음"
+                  wideRight
                   left={
                     <div style={{ fontSize: 11, color: '#888', padding: '6px 4px' }}>
                       매수 없음<br />일반 루틴 진행
@@ -279,7 +282,7 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
                           <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
                             37.5% (고정)<br />
                             시장가 매수<br />
-                            손절 ×0.97
+                            손절 -3%
                           </div>
                         </div>
                         {/* 섹터 */}
@@ -288,10 +291,10 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
                             섹터
                           </div>
                           <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
-                            볼 보유?<br />
+                            볼린저 보유?<br />
                             Y→31.25%<br />
                             N→50%<br />
-                            손절 ×0.95
+                            손절 -5%
                           </div>
                         </div>
                         {/* 볼린저 */}
@@ -300,10 +303,10 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
                             볼린저
                           </div>
                           <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
-                            섹 보유?<br />
+                            섹터 보유?<br />
                             Y→31.25%<br />
                             N→50%<br />
-                            손절 ×0.95
+                            손절 -5%
                           </div>
                         </div>
                       </div>
