@@ -142,8 +142,12 @@ export async function GET() {
 
     const top = results[0];
     const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
+    const currentYear = now.getUTCFullYear();
+    const currentMonth = now.getUTCMonth() + 1; // 1~12
+
+    // 타겟 월: 스크리닝은 "다음 달 진입 대상"을 정하는 것
+    const targetMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+    const targetYear = currentMonth === 12 ? currentYear + 1 : currentYear;
 
     // Supabase 저장: (strategy, screen_date) 기준 UPSERT — 같은 날 재실행 시 덮어쓰기, 다른 날은 별도 저장
     const screenDate = now.toISOString().slice(0, 10);
@@ -152,9 +156,9 @@ export async function GET() {
       .upsert({
         strategy: 'sector',
         screen_date: screenDate,
-        year,
-        month_num: month,
-        month_label: `${year}년 ${month}월`,
+        year: targetYear,
+        month_num: targetMonth,
+        month_label: `${targetYear}년 ${targetMonth}월`,
         result: results,
         selected_ticker: top?.code || null,
         selected_name: top?.name || null,
@@ -163,13 +167,14 @@ export async function GET() {
     if (upsertError) {
       console.error('[Sector] Supabase 저장 실패:', upsertError.message);
     } else {
-      console.log(`[Sector] Supabase 저장 성공: ${screenDate} (${year}년 ${month}월), 선택: ${top?.name || '없음'}`);
+      console.log(`[Sector] Supabase 저장 성공: ${screenDate} (타겟: ${targetYear}년 ${targetMonth}월), 선택: ${top?.name || '없음'}`);
     }
 
     return NextResponse.json({
       etfs: results,
       selected: top ? { code: top.code, name: top.name, composite: top.composite } : null,
-      month: { year, month, label: `${year}년 ${month}월` },
+      month: { year: targetYear, month: targetMonth, label: `${targetYear}년 ${targetMonth}월` },
+      screenDate,
       processedAt: now.toISOString(),
     });
   } catch (err: any) {

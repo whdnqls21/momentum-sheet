@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     // 이력 목록 조회 (최근 12건, screen_date 내림차순)
     const { data, error } = await supabase
       .from('screening_history')
-      .select('screen_date, month_label, selected_ticker, selected_name, created_at')
+      .select('screen_date, year, month_num, month_label, selected_ticker, selected_name, created_at')
       .eq('strategy', 'sector')
       .order('screen_date', { ascending: false })
       .limit(12);

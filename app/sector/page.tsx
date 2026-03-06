@@ -28,6 +28,8 @@ interface SectorResult {
 
 interface HistoryOption {
   screen_date: string;
+  year?: number;
+  month_num?: number;
   month_label: string;
   selected_ticker: string | null;
   selected_name: string | null;
@@ -50,6 +52,12 @@ function getEntrySignalLocal(rsi: number | null): EntrySignal {
   if (rsi === null) return 'NO_DATA';
   if (rsi < 30) return 'BUY';
   return 'WAIT';
+}
+
+function getCurrentKST(): { year: number; month: number } {
+  const kst = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
+  const [y, m] = kst.split('-');
+  return { year: parseInt(y), month: parseInt(m) };
 }
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
@@ -97,12 +105,29 @@ export default function SectorPage() {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [sectorTimeStatus, setSectorTimeStatus] = useState(canScreenSector());
   const [rsiTimeStatus, setRsiTimeStatus] = useState(canRefreshRSI());
+  const [currentKST, setCurrentKST] = useState(() => getCurrentKST());
+  const [sectorHolding, setSectorHolding] = useState(false);
 
-  // 1분마다 시간 체크
+  // 이번 달 타겟 존재 여부: month_num=현재월 && year=현재년인 이력이 있는지
+  const targetThisMonth = history.find(
+    h => h.year === currentKST.year && h.month_num === currentKST.month
+  );
+  const hasTarget = !!targetThisMonth;
+
+  // 1분마다 시간 체크 + 월 변경 감지
   useEffect(() => {
     const check = () => {
       setSectorTimeStatus(canScreenSector());
       setRsiTimeStatus(canRefreshRSI());
+      const newKST = getCurrentKST();
+      setCurrentKST(prev => {
+        if (prev.year !== newKST.year || prev.month !== newKST.month) {
+          setLockedTarget(null);
+          setSectorHolding(false);
+          return newKST;
+        }
+        return prev;
+      });
     };
     const interval = setInterval(check, 60000);
     return () => clearInterval(interval);
@@ -150,7 +175,7 @@ export default function SectorPage() {
     loadDateData(value);
   }, [loadDateData]);
 
-  // 초기 로드: 이력 목록 + 최신 결과
+  // 초기 로드: 이력 목록 + 최신 결과 + 보유 상태
   useEffect(() => {
     fetch('/api/sector/history', { cache: 'no-store' })
       .then((r) => r.json())
@@ -163,6 +188,13 @@ export default function SectorPage() {
             loadDateData(latest.screen_date);
           }
         }
+      })
+      .catch(() => {});
+    // 섹터 보유 여부 확인
+    fetch('/api/routine', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.holdings?.sector) setSectorHolding(true);
       })
       .catch(() => {});
   }, [loadDateData]);
@@ -273,20 +305,20 @@ export default function SectorPage() {
                   <button
                     className="btn-ribbon"
                     onClick={handleRun}
-                    disabled={loading || !sectorTimeStatus.allowed}
-                    title={sectorTimeStatus.reason}
-                    style={loading ? { backgroundColor: '#e2efda' } : !sectorTimeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                    disabled={loading || !sectorTimeStatus.allowed || hasTarget}
+                    title={hasTarget ? '이번 달 타겟 확정됨' : sectorTimeStatus.reason}
+                    style={loading ? { backgroundColor: '#e2efda' } : (!sectorTimeStatus.allowed || hasTarget) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 섹터 스크리닝'}
                   </button>
                   <button
                     className="btn-ribbon"
                     onClick={handleRsiRefresh}
-                    disabled={rsiLoading || !lockedTarget || loading || !rsiTimeStatus.allowed}
-                    title={rsiTimeStatus.reason}
+                    disabled={rsiLoading || !hasTarget || sectorHolding || loading || !rsiTimeStatus.allowed}
+                    title={!hasTarget ? '스크리닝 먼저 실행' : sectorHolding ? '이미 진입 완료' : rsiTimeStatus.reason}
                     style={{
                       ...(rsiLoading ? { backgroundColor: '#e2efda' } : {}),
-                      ...(!lockedTarget || !rsiTimeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
+                      ...(!hasTarget || sectorHolding || !rsiTimeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
                     }}
                   >
                     {rsiLoading ? '⏳ 조회 중...' : '🔄 RSI 새로고침'}
@@ -331,6 +363,23 @@ export default function SectorPage() {
           </div>
         )}
 
+        {/* ── 타겟 상태 메시지 ── */}
+        {!loading && !hasTarget && history.length > 0 && (
+          <div style={{ padding: '4px 12px', color: '#bf8f00', fontSize: 10, fontWeight: 600 }}>
+            ⚠ {currentKST.month}월 스크리닝 필요 — 스크리닝을 실행하세요
+          </div>
+        )}
+        {!loading && hasTarget && sectorHolding && (
+          <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
+            ✅ 이미 진입 완료
+          </div>
+        )}
+        {!loading && hasTarget && !sectorHolding && targetThisMonth?.selected_name && (
+          <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
+            ✅ {currentKST.month}월 진입 대상: {targetThisMonth.selected_name} — RSI 대기 중
+          </div>
+        )}
+
         {error && (
           <div style={{ padding: '8px 12px', color: '#9c0006', fontWeight: 700, fontSize: 11 }}>
             #ERROR — {error}
@@ -353,6 +402,11 @@ export default function SectorPage() {
                   <tr>
                     <td style={{ ...S.section, backgroundColor: '#FFFDE7', color: '#bf8f00' }} colSpan={2}>
                       📌 이번 달 진입 대상 ({lockedTarget.month.replace('-', '년 ')}월)
+                      {result.screenDate && (
+                        <span style={{ fontWeight: 400, fontSize: 9, marginLeft: 8, color: '#999' }}>
+                          ({result.screenDate.slice(0, 10)} 스크리닝 기준)
+                        </span>
+                      )}
                     </td>
                   </tr>
                   <tr>

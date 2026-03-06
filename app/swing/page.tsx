@@ -24,6 +24,15 @@ interface SwingResult {
 
 const fmt = (n: number) => n.toLocaleString();
 
+function getThisWeekMonday(): string {
+  const now = new Date(Date.now() + 9 * 60 * 60 * 1000); // KST
+  const dayOfWeek = now.getUTCDay(); // 0=일, 5=금
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setUTCDate(monday.getUTCDate() + diff);
+  return monday.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 function fmtOption(h: HistoryOption): string {
   const d = new Date(h.screen_date + 'T00:00:00');
@@ -101,10 +110,18 @@ export default function SwingPage() {
   const [error, setError] = useState<string | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [timeStatus, setTimeStatus] = useState(canScreenSwing());
+  const [thisWeekMonday, setThisWeekMonday] = useState(() => getThisWeekMonday());
 
-  // 1분마다 시간 체크
+  // 이번 주 스크리닝 완료 여부
+  const screenedThisWeek = history.some(h => h.screen_date >= thisWeekMonday);
+  const thisWeekEntry = history.find(h => h.screen_date >= thisWeekMonday);
+
+  // 1분마다 시간 체크 + 주 변경 감지
   useEffect(() => {
-    const check = () => setTimeStatus(canScreenSwing());
+    const check = () => {
+      setTimeStatus(canScreenSwing());
+      setThisWeekMonday(getThisWeekMonday());
+    };
     const interval = setInterval(check, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -237,9 +254,9 @@ export default function SwingPage() {
                   <button
                     className="btn-ribbon"
                     onClick={handleRun}
-                    disabled={loading || !timeStatus.allowed}
-                    title={timeStatus.reason}
-                    style={loading ? { backgroundColor: '#e2efda' } : !timeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                    disabled={loading || !timeStatus.allowed || screenedThisWeek}
+                    title={screenedThisWeek ? '이번 주 스크리닝 완료' : timeStatus.reason}
+                    style={loading ? { backgroundColor: '#e2efda' } : (!timeStatus.allowed || screenedThisWeek) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
                   </button>
@@ -277,9 +294,17 @@ export default function SwingPage() {
         </table>
         </div>
 
-        {!timeStatus.allowed && (
+        {!timeStatus.allowed && !screenedThisWeek && (
           <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10 }}>
             ⚠ {timeStatus.reason}
+          </div>
+        )}
+
+        {!loading && screenedThisWeek && (
+          <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
+            {thisWeekEntry?.selected_name
+              ? `✅ 이번 주 완료: ${thisWeekEntry.selected_name} — 월요일 매수`
+              : '✅ 이번 주 완료: 매수 후보 없음 — 다음 주 금요일 재스크리닝'}
           </div>
         )}
 

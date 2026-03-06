@@ -72,17 +72,20 @@ export async function GET() {
 
     // 2. 스크리닝 이력
     const [swingRes, sectorRes, bollingerRes] = await Promise.all([
+      // 스윙: 이번 주 월요일 이후 스크리닝 여부
       supabase
         .from('screening_history')
         .select('id, screen_date, selected_ticker, selected_name')
         .eq('strategy', 'swing')
         .gte('screen_date', kst.mondayStr)
         .limit(1),
+      // 섹터: month_num = 현재월 (타겟 월 기준)
       supabase
         .from('screening_history')
         .select('id, screen_date, selected_ticker, selected_name')
         .eq('strategy', 'sector')
-        .gte('screen_date', kst.firstOfMonth)
+        .eq('year', kst.year)
+        .eq('month_num', kst.month + 1)
         .limit(1),
       supabase
         .from('screening_history')
@@ -178,7 +181,22 @@ export async function GET() {
     }
 
     // ── 섹터 루틴 ──
-    // RSI 대기 중 (스크리닝 완료 + 미보유 + 선정 종목 있음)
+    // 이번 달 타겟 없음 → 스크리닝 필요
+    if (!screeningStatus.sector.done && !holdings.sector) {
+      routines.push({
+        time: '15:40~',
+        tag: 'sec',
+        label: '섹터',
+        action: `⚠ [섹터 스크리닝] ${kst.month + 1}월 진입 대상 확정`,
+        sheet: '섹터로테이션',
+        sheetPath: '/sector',
+        done: false,
+        highlight: false,
+        warn: true,
+      });
+    }
+
+    // 타겟 있음 + 미보유 → RSI 대기
     if (screeningStatus.sector.done && !holdings.sector && screeningStatus.sector.selectedName) {
       routines.push({
         time: '15:40~',
@@ -206,21 +224,6 @@ export async function GET() {
       });
     }
 
-    // 월말 섹터 스크리닝 미완료
-    if (kst.isMonthEnd && !screeningStatus.sector.done) {
-      routines.push({
-        time: '15:40~',
-        tag: 'sec',
-        label: '섹터',
-        action: '⚠ [섹터 스크리닝] 1위 ETF 확정',
-        sheet: '섹터로테이션',
-        sheetPath: '/sector',
-        done: false,
-        highlight: false,
-        warn: true,
-      });
-    }
-
     // ── 스윙 루틴 ──
     // 금요일 스윙 매도
     if (kst.isFriday && holdings.swing) {
@@ -236,33 +239,44 @@ export async function GET() {
       });
     }
 
-    // 스윙 스크리닝 미완료 리마인더 (금요일이 아니어도 표시)
-    if (!screeningStatus.swing.done) {
-      if (kst.isFriday) {
-        routines.push({
-          time: '18:00~',
-          tag: 'sw',
-          label: '스윙',
-          action: '⚠ [스크리닝 실행] PASS+60↑ 확인',
-          sheet: '단기스윙',
-          sheetPath: '/swing',
-          done: false,
-          highlight: false,
-          warn: true,
-        });
-      } else {
-        routines.push({
-          time: '금 18:00~',
-          tag: 'sw',
-          label: '스윙',
-          action: '⚠ 스윙 스크리닝 필요',
-          sheet: '단기스윙',
-          sheetPath: '/swing',
-          done: false,
-          highlight: false,
-          warn: true,
-        });
-      }
+    // 스윙 스크리닝 상태
+    if (screeningStatus.swing.done) {
+      routines.push({
+        time: '금 18:00~',
+        tag: 'sw',
+        label: '스윙',
+        action: screeningStatus.swing.selectedName
+          ? `✅ 이번 주 완료: ${screeningStatus.swing.selectedName} — 월요일 매수`
+          : '✅ 이번 주 완료: 매수 후보 없음',
+        sheet: '단기스윙',
+        sheetPath: '/swing',
+        done: true,
+        highlight: false,
+      });
+    } else if (kst.isFriday) {
+      routines.push({
+        time: '18:00~',
+        tag: 'sw',
+        label: '스윙',
+        action: '⚠ [스크리닝 실행] PASS+60↑ 확인',
+        sheet: '단기스윙',
+        sheetPath: '/swing',
+        done: false,
+        highlight: false,
+        warn: true,
+      });
+    } else {
+      routines.push({
+        time: '금 18:00~',
+        tag: 'sw',
+        label: '스윙',
+        action: '⚠ 스윙 스크리닝 필요',
+        sheet: '단기스윙',
+        sheetPath: '/swing',
+        done: false,
+        highlight: false,
+        warn: true,
+      });
     }
 
     // 시간순 정렬
