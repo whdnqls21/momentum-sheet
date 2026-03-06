@@ -202,6 +202,24 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
             운영 타임라인
           </div>
 
+          {/* 매수일 */}
+          <TimeBlock time="매수일 08:50">
+            <ActionCard borderColor="#bf8f00" bg="#FFFDE7">
+              <div style={{ fontWeight: 700 }}>① 매수 자금 결정</div>
+              <div style={{ paddingLeft: 12 }}>
+                <Tag type="sw" label="스윙" /> → 37.5% (고정)<br />
+                <Tag type="sec" label="섹터" /> → 볼린저 보유? YES 31.25% / NO 50%<br />
+                <Tag type="bb" label="볼린저" /> → 섹터 보유? YES 31.25% / NO 50%
+              </div>
+              <div style={{ fontWeight: 700, marginTop: 6 }}>② 한투앱 시장가 매수 (08:50 접수 → 09:00 체결)</div>
+              <div style={{ fontWeight: 700, marginTop: 4 }}>③ 즉시 손절 지정가 등록</div>
+              <div style={{ paddingLeft: 12 }}>
+                <Tag type="sw" label="스윙" /> ×0.97 | <Tag type="sec" label="섹터" /> ×0.95 | <Tag type="bb" label="볼린저" /> ×0.95
+              </div>
+              <div style={{ fontWeight: 700, marginTop: 4 }}>④ 매매일지 매수 기록</div>
+            </ActionCard>
+          </TimeBlock>
+
           {/* 장중 */}
           <TimeBlock time="장중 09:00~15:30">
             <ActionCard borderColor="#283593" bg="#E8EAF6">
@@ -256,24 +274,6 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
               <div style={{ paddingLeft: 8 }}>
                 <Neutral>익절/손절 미도달 시 15:20 종가 매도 → 매매일지 기록</Neutral>
               </div>
-            </ActionCard>
-          </TimeBlock>
-
-          {/* 매수일 */}
-          <TimeBlock time="매수일 08:50">
-            <ActionCard borderColor="#bf8f00" bg="#FFFDE7">
-              <div style={{ fontWeight: 700 }}>① 매수 자금 결정</div>
-              <div style={{ paddingLeft: 12 }}>
-                <Tag type="sw" label="스윙" /> → 37.5% (고정)<br />
-                <Tag type="sec" label="섹터" /> → 볼린저 보유? YES 31.25% / NO 50%<br />
-                <Tag type="bb" label="볼린저" /> → 섹터 보유? YES 31.25% / NO 50%
-              </div>
-              <div style={{ fontWeight: 700, marginTop: 6 }}>② 한투앱 시장가 매수 (08:50 접수 → 09:00 체결)</div>
-              <div style={{ fontWeight: 700, marginTop: 4 }}>③ 즉시 손절 지정가 등록</div>
-              <div style={{ paddingLeft: 12 }}>
-                <Tag type="sw" label="스윙" /> ×0.97 | <Tag type="sec" label="섹터" /> ×0.95 | <Tag type="bb" label="볼린저" /> ×0.95
-              </div>
-              <div style={{ fontWeight: 700, marginTop: 4 }}>④ 매매일지 매수 기록</div>
             </ActionCard>
           </TimeBlock>
 
