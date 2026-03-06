@@ -296,7 +296,8 @@ momentum-sheet/
 │   └── globals.css
 ├── components/
 │   ├── ExcelFrame.tsx            # Excel 프레임 (리본바, 수식줄, 시트탭, 상태바)
-│   └── StrategyRulesModal.tsx    # 전략 규칙 모달 (공통)
+│   ├── StrategyRulesModal.tsx    # 전략 규칙 모달 (공통)
+│   └── TradingFlowModal.tsx     # 운영 플로우 모달 (홈 페이지)
 ├── lib/
 │   ├── types.ts                  # 공유 타입
 │   ├── constants.ts              # 종목풀, 매매규칙, TR_ID
@@ -332,6 +333,7 @@ momentum-sheet/
 | 12 | 볼린저 장중 현재가 확인 | ✅ 완료 |
 | 13 | 대시보드 홈 확장 (자금 배분 + 루틴) | ✅ 완료 |
 | 14 | 모바일 UI 개선 | ✅ 완료 |
+| 15 | 운영 플로우 모달 | ✅ 완료 |
 
 ---
 

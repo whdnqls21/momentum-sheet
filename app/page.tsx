@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import ExcelFrame from '@/components/ExcelFrame';
+import TradingFlowModal from '@/components/TradingFlowModal';
 import type { BalanceResponse, Holding, JournalEntry } from '@/lib/types';
 import { TRADING_RULES } from '@/lib/constants';
 
@@ -70,6 +71,7 @@ export default function HomePage() {
   const [lastRefresh, setLastRefresh] = useState<string>('');
   const [routine, setRoutine] = useState<RoutineResponse | null>(null);
   const [openJournal, setOpenJournal] = useState<JournalEntry[]>([]);
+  const [flowOpen, setFlowOpen] = useState(false);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -168,7 +170,16 @@ export default function HomePage() {
     : undefined;
 
   return (
-    <ExcelFrame onRefresh={handleRefresh} refreshing={refreshing} statusItems={statusItems}>
+    <ExcelFrame
+      onRefresh={handleRefresh}
+      refreshing={refreshing}
+      statusItems={statusItems}
+      ribbonExtra={
+        <button className="btn-ribbon" onClick={() => setFlowOpen(true)}>
+          📊 운영 플로우
+        </button>
+      }
+    >
       {loading ? (
         <div style={{ padding: 20, color: '#888' }}>로딩 중...</div>
       ) : error ? (
@@ -455,6 +466,7 @@ export default function HomePage() {
           </div>
         </div>
       ) : null}
+      <TradingFlowModal isOpen={flowOpen} onClose={() => setFlowOpen(false)} />
     </ExcelFrame>
   );
 }

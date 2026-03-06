@@ -32,9 +32,10 @@ interface ExcelFrameProps {
   statusItems?: { avg?: string; count?: string; sum?: string };
   onRefresh?: () => void;
   refreshing?: boolean;
+  ribbonExtra?: ReactNode;
 }
 
-export default function ExcelFrame({ children, statusItems, onRefresh, refreshing }: ExcelFrameProps) {
+export default function ExcelFrame({ children, statusItems, onRefresh, refreshing, ribbonExtra }: ExcelFrameProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -96,6 +97,7 @@ export default function ExcelFrame({ children, statusItems, onRefresh, refreshin
               {refreshing ? '⏳ 갱신 중...' : '▶ 전체 새로고침'}
             </button>
           )}
+          {ribbonExtra}
           <span style={{ fontSize: 10, color: '#888' }}>
             {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
           </span>
