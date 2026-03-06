@@ -37,6 +37,19 @@ export function canScreenSector(): { allowed: boolean; reason?: string } {
   };
 }
 
+export function canScreenBollinger(): { allowed: boolean; reason?: string } {
+  const hour = getKSTHour();
+  const min = getKSTMinutes();
+  // 15:40~23:59, 00:00~08:59 허용 (섹터와 동일)
+  if (hour >= 16 || (hour === 15 && min >= 40) || hour < 9) {
+    return { allowed: true };
+  }
+  return {
+    allowed: false,
+    reason: "정규장 종가가 15:30에 확정됩니다. 15:40 이후 스크리닝 가능합니다."
+  };
+}
+
 export function canRefreshRSI(): { allowed: boolean; reason?: string } {
   const hour = getKSTHour();
   const min = getKSTMinutes();

@@ -23,6 +23,18 @@ export const SECTOR_ETFS = [
   { code: '244580', name: 'KODEX 바이오' },
 ] as const;
 
+// ── 볼린저밴드 전략 ETF (고정 8종목) ──
+export const BB_ETFS = [
+  { code: '091160', name: 'KODEX 반도체' },
+  { code: '091180', name: 'KODEX 자동차' },
+  { code: '091170', name: 'KODEX 은행' },
+  { code: '117680', name: 'KODEX 철강' },
+  { code: '117700', name: 'KODEX 건설' },
+  { code: '305540', name: 'TIGER 2차전지테마' },
+  { code: '244580', name: 'KODEX 바이오' },
+  { code: '229200', name: 'KODEX 코스닥150' },
+] as const;
+
 // ── ETF 키워드 (2차 풀 필터용) ──
 export const ETF_KEYWORDS = [
   'KODEX', 'TIGER', 'KBSTAR', 'SOL', 'ACE', 'HANARO', 'ARIRANG',

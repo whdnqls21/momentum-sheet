@@ -7,7 +7,7 @@
 
 ## 프로젝트 개요
 
-한국투자증권 오픈API를 활용한 **2트랙 모멘텀 투자 관리 시스템**.
+한국투자증권 오픈API를 활용한 **3트랙 모멘텀 투자 관리 시스템**.
 Excel 스프레드시트 스타일 UI로 모바일/PC에서 사용.
 
 - **기술스택**: Next.js 14 (App Router) + TypeScript + Tailwind CSS
@@ -168,6 +168,17 @@ KODEX, TIGER, KBSTAR, SOL, ACE, HANARO, ARIRANG, KOSEF, KIWOOM, BNK, TIMEFOLIO, 
 **매매규칙**: 200만원 매수, 익절 +7%, 손절 -3%, 금요일 미청산 시 종가 매도
 - **스크리닝 시간 제한**: 18:00~08:59 가능, 09:00~17:59 불가 (외국인 수급 데이터 확정 대기)
 
+### 트랙 C: 볼린저밴드 %B (매일)
+- **주기**: 매일 (장 마감 후 스크리닝)
+- **종목풀**: 8개 섹터 ETF (섹터 7개 + KODEX 코스닥150)
+- **매수 조건**: %B < 0.10 AND 거래량 ≥ 20일 평균의 1.5배
+  - 복수 신호 시 %B 가장 낮은 종목 1개
+  - 매수 타이밍: 익일 08:50 시장가
+- **청산 조건**: 익절 %B ≥ 0.5 (익일 매도), 손절 -5%
+- **서킷브레이커**: 2연속 손절 → 2주 중단, 총자금 30% 손실 → 전면 중단
+- **매매 자금**: 150만원 (복리 운용)
+- **스크리닝 시간 제한**: 15:40~08:59 가능, 09:00~15:39 불가
+
 ---
 
 ## Supabase 테이블 구조
@@ -264,6 +275,7 @@ momentum-sheet/
 │   ├── page.tsx                  # 잔고현황 (홈)
 │   ├── swing/page.tsx            # 단기스윙 스크리닝
 │   ├── sector/page.tsx           # 섹터로테이션 + RSI 진입 필터
+│   ├── bollinger/page.tsx        # 볼린저밴드 %B 스크리닝
 │   ├── journal/page.tsx          # 매매일지
 │   ├── stats/page.tsx            # 성과분석
 │   ├── api/
@@ -273,6 +285,9 @@ momentum-sheet/
 │   │   │   ├── route.ts          # 섹터 스크리닝 (모멘텀 + RSI)
 │   │   │   ├── history/route.ts  # 섹터 이력 조회
 │   │   │   └── rsi/route.ts      # RSI 새로고침 (1위 ETF 전용)
+│   │   ├── bollinger/
+│   │   │   ├── route.ts          # 볼린저 스크리닝
+│   │   │   └── history/route.ts  # 볼린저 이력
 │   │   └── journal/route.ts      # 매매일지 CRUD
 │   ├── layout.tsx
 │   └── globals.css
@@ -286,6 +301,7 @@ momentum-sheet/
 │   ├── kis-api.ts                # API 클라이언트
 │   ├── rate-limiter.ts           # 초당 20회 제한
 │   ├── rsi.ts                    # RSI(3) 계산 + 진입 신호 판단
+│   ├── bollinger.ts              # 볼린저밴드 %B 계산 + 신호 판단
 │   ├── tradingHours.ts           # 스크리닝 시간 제한 (KST 기준)
 │   └── supabase.ts               # Supabase 클라이언트
 └── docs/
@@ -308,6 +324,7 @@ momentum-sheet/
 | 7 | RSI(3) 진입 필터 | ✅ 완료 |
 | 8 | Vercel 배포 | ✅ 완료 |
 | 9 | 스크리닝 시간 제한 | ✅ 완료 |
+| 10 | 볼린저밴드 %B 전략 | ✅ 완료 |
 
 ---
 

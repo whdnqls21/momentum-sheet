@@ -1,6 +1,6 @@
 # 📊 MomentumSheet — 모멘텀 투자 관리
 
-2트랙 모멘텀 투자 전략(섹터로테이션 + 단기스윙)을 위한 스크리닝·매매관리·성과분석 대시보드.
+3트랙 모멘텀 투자 전략(섹터로테이션 + 단기스윙 + 볼린저밴드)을 위한 스크리닝·매매관리·성과분석 대시보드.
 Excel 스프레드시트 스타일 UI · 한국투자증권 오픈API 연동 · PWA 지원
 
 ## 기술 스택
@@ -15,6 +15,7 @@ Excel 스프레드시트 스타일 UI · 한국투자증권 오픈API 연동 · 
 - **잔고현황**: 보유종목·계좌요약·오늘의 할일 체크리스트
 - **단기스윙**: 20종목 8지표 100점 스코어링 (주간)
 - **섹터로테이션**: 7개 섹터 ETF 복합 모멘텀 + RSI(3) 진입 필터 (월간)
+- **볼린저밴드**: 8개 섹터 ETF %B 평균회귀 전략 (매일)
 - **매매일지**: 매수/매도 기록 CRUD
 - **성과분석**: 누적 손익 차트, 전략별 비교, 청산 사유 분석
 - **PWA**: 홈화면 설치, 오프라인 지원
@@ -65,6 +66,7 @@ momentum-sheet/
 │   ├── page.tsx                  ← 잔고현황 (홈)
 │   ├── swing/page.tsx            ← 단기스윙
 │   ├── sector/page.tsx           ← 섹터로테이션 + RSI 진입 필터
+│   ├── bollinger/page.tsx        ← 볼린저밴드 %B 스크리닝
 │   ├── journal/page.tsx          ← 매매일지
 │   ├── stats/page.tsx            ← 성과분석
 │   ├── api/
@@ -76,6 +78,9 @@ momentum-sheet/
 │   │   │   ├── route.ts          ← 섹터 스크리닝
 │   │   │   ├── history/route.ts  ← 섹터 이력
 │   │   │   └── rsi/route.ts      ← RSI 새로고침 (1위 ETF 전용)
+│   │   ├── bollinger/
+│   │   │   ├── route.ts          ← 볼린저 스크리닝
+│   │   │   └── history/route.ts  ← 볼린저 이력
 │   │   └── journal/route.ts      ← 매매일지 CRUD
 │   ├── layout.tsx
 │   └── globals.css
@@ -89,6 +94,7 @@ momentum-sheet/
 │   ├── kis-api.ts                ← API 클라이언트
 │   ├── rate-limiter.ts           ← 초당 20회 제한
 │   ├── rsi.ts                    ← RSI(3) 계산 + 진입 신호 판단
+│   ├── bollinger.ts              ← 볼린저밴드 %B 계산 + 신호 판단
 │   ├── tradingHours.ts           ← 스크리닝 시간 제한 (KST 기준)
 │   └── supabase.ts               ← Supabase 클라이언트
 ├── docs/
@@ -123,6 +129,7 @@ RSI(3) >= 30 → WAIT (다음 날 장 마감 후 재확인)
 | 7 | RSI(3) 진입 필터 | ✅ 완료 |
 | 8 | Vercel 배포 | ✅ 완료 |
 | 9 | 스크리닝 시간 제한 | ✅ 완료 |
+| 10 | 볼린저밴드 %B 전략 | ✅ 완료 |
 
 ## 문서
 
