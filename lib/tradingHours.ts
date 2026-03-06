@@ -50,6 +50,18 @@ export function canScreenBollinger(): { allowed: boolean; reason?: string } {
   };
 }
 
+export function canCheckBBExit(): { allowed: boolean; reason?: string } {
+  const hour = getKSTHour();
+  const min = getKSTMinutes();
+  if (hour >= 16 || (hour === 15 && min >= 40) || hour < 9) {
+    return { allowed: true };
+  }
+  return {
+    allowed: false,
+    reason: "당일 종가가 15:30에 확정됩니다. 15:40 이후 매도 신호 확인 가능합니다."
+  };
+}
+
 export function canRefreshRSI(): { allowed: boolean; reason?: string } {
   const hour = getKSTHour();
   const min = getKSTMinutes();

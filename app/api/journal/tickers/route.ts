@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { SWING_POOL_1, SECTOR_ETFS } from '@/lib/constants';
+import { SWING_POOL_1, SECTOR_ETFS, BB_ETFS } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
 interface TickerSuggestion {
   code: string;
   name: string;
-  strategy: 'swing' | 'sector';
+  strategy: 'swing' | 'sector' | 'bollinger';
   pool_type?: string;
 }
 
@@ -35,6 +35,9 @@ export async function GET() {
     }
     for (const s of SECTOR_ETFS) {
       tickers.set(`sector:${s.code}`, { code: s.code, name: s.name, strategy: 'sector' });
+    }
+    for (const s of BB_ETFS) {
+      tickers.set(`bollinger:${s.code}`, { code: s.code, name: s.name, strategy: 'bollinger' });
     }
 
     // 2) 스크리닝 이력에서 추가 종목 수집

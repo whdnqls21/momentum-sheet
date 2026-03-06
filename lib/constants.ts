@@ -59,6 +59,14 @@ export const TRADING_RULES = {
     slAlert: -4,      // 임박: -4%
     clearDay: 'monthEnd' as const,
   },
+  bollinger: {
+    buyAmount: 1_500_000,
+    takeProfit: 50,   // %B >= 0.5 (별도 로직)
+    stopLoss: -5,     // -5%
+    tpAlert: 45,      // 임박 없음 (placeholder)
+    slAlert: -3,      // 임박: -3%
+    clearDay: 'none' as const,
+  },
 } as const;
 
 // ── 한투 API ──

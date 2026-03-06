@@ -22,11 +22,11 @@ const S = {
 };
 
 interface CumPoint { date: string; cumulative: number }
-interface MonthlyPoint { month: string; swing: number; sector: number; total: number }
+interface MonthlyPoint { month: string; swing: number; sector: number; bollinger: number; total: number }
 interface ReasonStats { reason: string; count: number; ratio: number; totalPnl: number; avgReturn: number }
 
 interface Props {
-  cumulative: { total: CumPoint[]; swing: CumPoint[]; sector: CumPoint[] };
+  cumulative: { total: CumPoint[]; swing: CumPoint[]; sector: CumPoint[]; bollinger: CumPoint[] };
   monthly: MonthlyPoint[];
   byReason: ReasonStats[];
 }
@@ -90,16 +90,19 @@ function CumulativeChart({ cumulative }: { cumulative: Props['cumulative'] }) {
   const totalMap = new Map(cumulative.total.map((p) => [p.date, p.cumulative]));
   const swingMap = new Map(cumulative.swing.map((p) => [p.date, p.cumulative]));
   const sectorMap = new Map(cumulative.sector.map((p) => [p.date, p.cumulative]));
+  const bollingerMap = new Map(cumulative.bollinger.map((p) => [p.date, p.cumulative]));
 
-  let lastSwing = 0, lastSector = 0;
+  let lastSwing = 0, lastSector = 0, lastBollinger = 0;
   const data = dates.map((d) => {
     if (swingMap.has(d)) lastSwing = swingMap.get(d)!;
     if (sectorMap.has(d)) lastSector = sectorMap.get(d)!;
+    if (bollingerMap.has(d)) lastBollinger = bollingerMap.get(d)!;
     return {
       date: d,
-      total: totalMap.get(d) ?? lastSwing + lastSector,
+      total: totalMap.get(d) ?? lastSwing + lastSector + lastBollinger,
       swing: lastSwing,
       sector: lastSector,
+      bollinger: lastBollinger,
     };
   });
 
@@ -121,6 +124,9 @@ function CumulativeChart({ cumulative }: { cumulative: Props['cumulative'] }) {
         )}
         {cumulative.sector.length > 0 && (
           <Line type="monotone" dataKey="sector" name="섹터" stroke="#4CAF50" strokeWidth={2} dot={{ r: 2 }} />
+        )}
+        {cumulative.bollinger.length > 0 && (
+          <Line type="monotone" dataKey="bollinger" name="볼린저" stroke="#009688" strokeWidth={2} dot={{ r: 2 }} />
         )}
         <Line type="monotone" dataKey="total" name="전체" stroke="#333" strokeWidth={2} strokeDasharray="5 3" dot={false} />
       </LineChart>
@@ -146,6 +152,7 @@ function MonthlyChart({ monthly }: { monthly: MonthlyPoint[] }) {
         <ReferenceLine y={0} stroke="#999" strokeDasharray="3 3" />
         <Bar dataKey="swing" name="스윙" stackId="a" fill="#2196F3" />
         <Bar dataKey="sector" name="섹터" stackId="a" fill="#4CAF50" />
+        <Bar dataKey="bollinger" name="볼린저" stackId="a" fill="#009688" />
       </BarChart>
     </ResponsiveContainer>
   );

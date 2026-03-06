@@ -2,7 +2,7 @@
 
 **버전**: v1.3
 **작성일**: 2026-02-26
-**최종수정**: 2026-03-06 (볼린저밴드 %B 전략 추가)  
+**최종수정**: 2026-03-06 (매매일지/성과분석 볼린저 지원 추가)
 **프로젝트**: MomentumSheet — 모멘텀 투자 관리 시스템
 
 ---
@@ -785,7 +785,7 @@ const SECTOR_ETFS = [
 | 컬럼 | 타입 | 필수 | 설명 |
 |------|------|------|------|
 | `id` | UUID | PK | 자동생성 |
-| `strategy` | TEXT | ✓ | `'swing'` 또는 `'sector'` |
+| `strategy` | TEXT | ✓ | `'swing'`, `'sector'`, `'bollinger'` |
 | `ticker_code` | TEXT | ✓ | 종목코드 |
 | `ticker_name` | TEXT | ✓ | 종목명 |
 | `buy_date` | DATE | ✓ | 매수일 |
@@ -807,7 +807,7 @@ const SECTOR_ETFS = [
 | 컬럼 | 타입 | 필수 | 설명 |
 |------|------|------|------|
 | `id` | UUID | PK | 자동생성 |
-| `strategy` | TEXT | ✓ | `'swing'` 또는 `'sector'` |
+| `strategy` | TEXT | ✓ | `'swing'`, `'sector'`, `'bollinger'` |
 | `screen_date` | DATE | ✓ | 스크리닝 실행일 |
 | `year` | INTEGER | ✓ | 연도 (2026 등) |
 | `week_num` | INTEGER | | ISO 주차 1~53 (스윙용) |
@@ -1203,6 +1203,8 @@ interface StatsResponse {
 | **8** | Vercel 배포 | 소 | 배포 + 환경변수 설정 | ✅ |
 | **9** | 스크리닝 시간 제한 | 소 | 장 마감 후 시간대만 스크리닝 허용 | ✅ |
 | **10** | 볼린저밴드 %B 전략 | 중 | 8개 ETF %B 스크리닝 + 매수/익절 신호 | ✅ |
+| **11** | 볼린저 매도 신호 모니터링 | 소 | 보유 종목 %B 조회 + 익절 신호 카드 | ✅ |
+| **12** | 볼린저 장중 현재가 확인 | 소 | 보유 종목 현재가 + 손절 근접 경고 | ✅ |
 
 ---
 

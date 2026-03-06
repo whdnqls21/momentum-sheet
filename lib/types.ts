@@ -9,7 +9,7 @@ export interface Holding {
   pnl: number;
   pnlRate: number;
   change: number;
-  strategy?: 'swing' | 'sector';
+  strategy?: 'swing' | 'sector' | 'bollinger';
 }
 
 export interface BalanceSummary {
@@ -76,7 +76,7 @@ export interface SectorETF {
 // ── 매매일지 ──
 export interface JournalEntry {
   id: string;
-  strategy: 'swing' | 'sector';
+  strategy: 'swing' | 'sector' | 'bollinger';
   ticker_code: string;
   ticker_name: string;
   buy_date: string;
@@ -97,7 +97,7 @@ export interface JournalEntry {
 // ── 스크리닝 이력 ──
 export interface ScreeningHistory {
   id: string;
-  strategy: 'swing' | 'sector';
+  strategy: 'swing' | 'sector' | 'bollinger';
   screen_date: string;
   year: number;
   week_num: number | null;

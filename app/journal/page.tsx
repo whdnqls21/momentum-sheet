@@ -99,6 +99,7 @@ export default function JournalPage() {
                     <option value="">전략: 전체</option>
                     <option value="swing">스윙</option>
                     <option value="sector">섹터</option>
+                    <option value="bollinger">볼린저</option>
                   </select>
                   <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
                     style={{ fontSize: 11, padding: '2px 4px', border: '1px solid #d4d4d4' }}>
@@ -207,8 +208,8 @@ function OpenTable({ entries, onSell, onDelete }: {
         ) : entries.map((e, i) => (
           <tr key={e.id} style={{ backgroundColor: '#FFFDE7' }}>
             <td style={S.rowNum}>{i + 1}</td>
-            <td style={{ ...S.tdC, fontSize: 10, color: e.strategy === 'swing' ? '#2e75b6' : '#7030a0' }}>
-              {e.strategy === 'swing' ? '스윙' : '섹터'}
+            <td style={{ ...S.tdC, fontSize: 10, color: e.strategy === 'swing' ? '#2e75b6' : e.strategy === 'bollinger' ? '#00695c' : '#7030a0' }}>
+              {e.strategy === 'swing' ? '스윙' : e.strategy === 'bollinger' ? '볼린저' : '섹터'}
             </td>
             <td style={S.tdL}>{e.ticker_name}</td>
             <td style={S.tdC}>{e.buy_date}</td>
@@ -296,7 +297,7 @@ function ClosedTable({ entries, onDelete }: {
 interface TickerSuggestion {
   code: string;
   name: string;
-  strategy: 'swing' | 'sector';
+  strategy: 'swing' | 'sector' | 'bollinger';
   pool_type?: string;
 }
 
@@ -409,6 +410,10 @@ function BuyModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => vo
               <label style={{ fontSize: 11, marginLeft: 8 }}>
                 <input type="radio" name="strategy" value="sector" checked={form.strategy === 'sector'}
                   onChange={(e) => setForm({ ...form, strategy: e.target.value, ticker_code: '', ticker_name: '', pool_type: '' })} /> 섹터
+              </label>
+              <label style={{ fontSize: 11, marginLeft: 8 }}>
+                <input type="radio" name="strategy" value="bollinger" checked={form.strategy === 'bollinger'}
+                  onChange={(e) => setForm({ ...form, strategy: e.target.value, ticker_code: '', ticker_name: '', pool_type: '' })} /> 볼린저
               </label>
             </FormRow>
             <FormRow label="종목명">

@@ -6,7 +6,7 @@
 -- 매매일지
 CREATE TABLE IF NOT EXISTS journal (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  strategy TEXT NOT NULL CHECK (strategy IN ('swing', 'sector')),
+  strategy TEXT NOT NULL CHECK (strategy IN ('swing', 'sector', 'bollinger')),
   ticker_code TEXT NOT NULL,
   ticker_name TEXT NOT NULL,
   buy_date DATE NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS journal (
 -- 스크리닝 이력
 CREATE TABLE IF NOT EXISTS screening_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  strategy TEXT NOT NULL CHECK (strategy IN ('swing', 'sector')),
+  strategy TEXT NOT NULL CHECK (strategy IN ('swing', 'sector', 'bollinger')),
   screen_date DATE NOT NULL,
   year INTEGER NOT NULL,
   week_num INTEGER,

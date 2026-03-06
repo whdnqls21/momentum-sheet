@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
 import StrategyRulesModal from '@/components/StrategyRulesModal';
-import { canScreenBollinger } from '@/lib/tradingHours';
+import { canScreenBollinger, canCheckBBExit } from '@/lib/tradingHours';
 import type { BBSignal } from '@/lib/bollinger';
 
 interface BBETFResult {
@@ -21,6 +21,34 @@ interface BBScreenResult {
   buyCandidate: { code: string; name: string; percentB: number | null; volumeRatio: number | null } | null;
   screenDate?: string;
   processedAt?: string;
+}
+
+interface HoldingBase {
+  code: string;
+  name: string;
+  buyDate: string;
+  buyPrice: number;
+  buyQty: number;
+  buyAmount: number;
+  stopLossPrice: number;
+}
+
+interface HoldingPrice extends HoldingBase {
+  currentPrice: number;
+  profitRate: number;
+  profitLoss: number;
+  stopLossNear: boolean;
+  updatedAt: string;
+}
+
+interface HoldingFull extends HoldingBase {
+  currentPrice: number;
+  profitRate: number;
+  profitLoss: number;
+  percentB: number | null;
+  exitSignal: 'EXIT' | 'HOLD' | 'NO_DATA';
+  bb: { upper: number; middle: number; lower: number } | null;
+  updatedAt: string;
 }
 
 interface HistoryOption {
@@ -88,10 +116,17 @@ export default function BollingerPage() {
   const [error, setError] = useState<string | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [timeStatus, setTimeStatus] = useState(canScreenBollinger());
+  const [holding, setHolding] = useState<HoldingBase | HoldingPrice | HoldingFull | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [exitLoading, setExitLoading] = useState(false);
+  const [exitTimeStatus, setExitTimeStatus] = useState(canCheckBBExit());
 
   // 1분마다 시간 체크
   useEffect(() => {
-    const check = () => setTimeStatus(canScreenBollinger());
+    const check = () => {
+      setTimeStatus(canScreenBollinger());
+      setExitTimeStatus(canCheckBBExit());
+    };
     const interval = setInterval(check, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -145,6 +180,48 @@ export default function BollingerPage() {
       })
       .catch(() => {});
   }, [loadDateData]);
+
+  // 보유 종목 확인 (초기 로드)
+  useEffect(() => {
+    fetch('/api/bollinger/exit', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.holding) setHolding(data.holding);
+      })
+      .catch(() => {});
+  }, []);
+
+  // 장중 현재가 확인
+  const handlePriceCheck = useCallback(async () => {
+    if (!holding) return;
+    setPriceLoading(true);
+    try {
+      const res = await fetch('/api/bollinger/price', { cache: 'no-store' });
+      if (!res.ok) throw new Error('현재가 조회 실패');
+      const data = await res.json();
+      if (data.holding) setHolding(data.holding);
+    } catch {
+      // ignore
+    } finally {
+      setPriceLoading(false);
+    }
+  }, [holding]);
+
+  // 매도 신호 확인
+  const handleExitCheck = useCallback(async () => {
+    if (!holding) return;
+    setExitLoading(true);
+    try {
+      const res = await fetch('/api/bollinger/exit?refresh=true', { cache: 'no-store' });
+      if (!res.ok) throw new Error('매도 신호 확인 실패');
+      const data = await res.json();
+      if (data.holding) setHolding(data.holding);
+    } catch {
+      // ignore
+    } finally {
+      setExitLoading(false);
+    }
+  }, [holding]);
 
   // 스크리닝 실행
   const handleRun = useCallback(async () => {
@@ -220,6 +297,24 @@ export default function BollingerPage() {
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
                   </button>
+                  <button
+                    className="btn-ribbon"
+                    onClick={handlePriceCheck}
+                    disabled={priceLoading || !holding}
+                    title={!holding ? '보유 종목 없음' : undefined}
+                    style={priceLoading ? { backgroundColor: '#e2efda' } : !holding ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                  >
+                    {priceLoading ? '⏳ 조회 중...' : '📊 현재가 확인'}
+                  </button>
+                  <button
+                    className="btn-ribbon"
+                    onClick={handleExitCheck}
+                    disabled={exitLoading || !holding || !exitTimeStatus.allowed}
+                    title={!holding ? '보유 종목 없음' : exitTimeStatus.reason}
+                    style={exitLoading ? { backgroundColor: '#e2efda' } : (!holding || !exitTimeStatus.allowed) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                  >
+                    {exitLoading ? '⏳ 확인 중...' : '📉 매도 신호 확인'}
+                  </button>
                   <select
                     value={selectedDate}
                     onChange={(e) => handleDateChange(e.target.value)}
@@ -265,6 +360,143 @@ export default function BollingerPage() {
             ⏳ 8개 ETF 데이터 수집 중... (약 5~10초 소요)
           </div>
         )}
+
+        {/* ── 보유 종목 카드 ── */}
+        {holding && (() => {
+          const isFull = 'exitSignal' in holding;
+          const isPrice = !isFull && 'currentPrice' in holding;
+          const full = isFull ? holding as HoldingFull : null;
+          const price = isPrice ? holding as HoldingPrice : null;
+          const isExit = full?.exitSignal === 'EXIT';
+          const isStopNear = price?.stopLossNear === true;
+          const cardBg = isExit ? '#FFFDE7' : isStopNear ? '#FFEBEE' : (full || price) ? '#E3F2FD' : '#E3F2FD';
+          const headerBg = isExit ? '#FFFDE7' : isStopNear ? '#ffcdd2' : '#bbdefb';
+          const headerIcon = isStopNear ? '⚠️' : '📈';
+
+          return (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ ...S.section, backgroundColor: headerBg, color: '#1f3864' }} colSpan={2}>
+                    {headerIcon} 보유 중: {holding.name} ({holding.code})
+                  </td>
+                </tr>
+                <tr>
+                  <td style={S.rowNum} />
+                  <td style={{ ...S.tdL, padding: '10px 12px', backgroundColor: cardBg }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      {full ? (
+                        <>
+                          <div style={{ fontSize: 11, color: '#333' }}>
+                            매수가: {fmt(holding.buyPrice)}원 | 현재가: {fmt(full.currentPrice)}원
+                            <span style={{
+                              marginLeft: 6,
+                              fontWeight: 700,
+                              color: full.profitRate >= 0 ? '#006100' : '#9c0006',
+                            }}>
+                              ({full.profitRate >= 0 ? '+' : ''}{full.profitRate.toFixed(1)}%)
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 11, color: full.profitLoss >= 0 ? '#006100' : '#9c0006', fontWeight: 600 }}>
+                            평가손익: {full.profitLoss >= 0 ? '+' : ''}{fmt(full.profitLoss)}원
+                          </div>
+                          <div style={{ fontSize: 10, color: '#666' }}>
+                            손절가: {fmt(holding.stopLossPrice)}원 (-5%)
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 700, marginTop: 2 }}>
+                            %B: {full.percentB !== null ? full.percentB.toFixed(3) : '—'}
+                          </div>
+                          {isExit ? (
+                            <div style={{
+                              display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 11,
+                              width: 'fit-content',
+                            }}>
+                              🔔 익절 신호! — 익일 08:50 시장가 매도
+                            </div>
+                          ) : (
+                            <div style={{
+                              display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#e3f2fd', color: '#1565c0', fontWeight: 600, fontSize: 11,
+                              width: 'fit-content',
+                            }}>
+                              ⏳ 보유 유지 — %B ≥ 0.5 시 매도
+                            </div>
+                          )}
+                          {full.bb && (
+                            <div style={{ fontSize: 10, color: '#888' }}>
+                              밴드: 하단 {fmt(full.bb.lower)} | 중심 {fmt(full.bb.middle)} | 상단 {fmt(full.bb.upper)}
+                            </div>
+                          )}
+                          <div style={{ fontSize: 9, color: '#999' }}>
+                            확인시각: {full.updatedAt}
+                          </div>
+                        </>
+                      ) : price ? (
+                        <>
+                          <div style={{ fontSize: 11, color: '#333' }}>
+                            매수가: {fmt(holding.buyPrice)}원 | 현재가: {fmt(price.currentPrice)}원
+                            <span style={{
+                              marginLeft: 6,
+                              fontWeight: 700,
+                              color: price.profitRate >= 0 ? '#006100' : '#9c0006',
+                            }}>
+                              ({price.profitRate >= 0 ? '+' : ''}{price.profitRate.toFixed(1)}%)
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 11, color: price.profitLoss >= 0 ? '#006100' : '#9c0006', fontWeight: 600 }}>
+                            평가손익: {price.profitLoss >= 0 ? '+' : ''}{fmt(price.profitLoss)}원
+                          </div>
+                          <div style={{ fontSize: 10, color: '#666' }}>
+                            손절가: {fmt(holding.stopLossPrice)}원 (-5%)
+                          </div>
+                          {isStopNear && (
+                            <div style={{
+                              padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 11,
+                              marginTop: 2,
+                            }}>
+                              🚨 손절가 근접! 현재가와 손절가 차이: {fmt(price.currentPrice - holding.stopLossPrice)}원 ({((price.currentPrice - holding.stopLossPrice) / holding.stopLossPrice * 100).toFixed(1)}%)
+                              <br />
+                              <span style={{ fontWeight: 400, fontSize: 10 }}>
+                                손절 지정가 주문이 등록되어 있는지 확인하세요.
+                              </span>
+                            </div>
+                          )}
+                          <div style={{
+                            display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                            backgroundColor: '#e3f2fd', color: '#1565c0', fontWeight: 600, fontSize: 11,
+                            width: 'fit-content', marginTop: 2,
+                          }}>
+                            💡 장중 시세 — %B 매도 신호는 15:40 이후 확인 가능
+                          </div>
+                          <div style={{ fontSize: 9, color: '#999' }}>
+                            확인시각: {price.updatedAt}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ fontSize: 11, color: '#333' }}>
+                            매수일: {holding.buyDate}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#333' }}>
+                            매수가: {fmt(holding.buyPrice)}원 | 수량: {holding.buyQty}주 | 매수금액: {fmt(holding.buyAmount)}원
+                          </div>
+                          <div style={{ fontSize: 10, color: '#666' }}>
+                            손절가: {fmt(holding.stopLossPrice)}원 (-5%)
+                          </div>
+                          <div style={{ fontSize: 10, color: '#888', marginTop: 4 }}>
+                            [📊 현재가 확인] 또는 [📉 매도 신호 확인] 버튼을 눌러주세요.
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          );
+        })()}
 
         {result && (
           <>

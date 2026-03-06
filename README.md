@@ -66,7 +66,7 @@ momentum-sheet/
 │   ├── page.tsx                  ← 잔고현황 (홈)
 │   ├── swing/page.tsx            ← 단기스윙
 │   ├── sector/page.tsx           ← 섹터로테이션 + RSI 진입 필터
-│   ├── bollinger/page.tsx        ← 볼린저밴드 %B 스크리닝
+│   ├── bollinger/page.tsx        ← 볼린저밴드 %B 스크리닝 + 매도 신호 모니터링
 │   ├── journal/page.tsx          ← 매매일지
 │   ├── stats/page.tsx            ← 성과분석
 │   ├── api/
@@ -80,7 +80,9 @@ momentum-sheet/
 │   │   │   └── rsi/route.ts      ← RSI 새로고침 (1위 ETF 전용)
 │   │   ├── bollinger/
 │   │   │   ├── route.ts          ← 볼린저 스크리닝
-│   │   │   └── history/route.ts  ← 볼린저 이력
+│   │   │   ├── history/route.ts  ← 볼린저 이력
+│   │   │   ├── exit/route.ts     ← 볼린저 매도 신호 확인
+│   │   │   └── price/route.ts    ← 볼린저 장중 현재가 조회
 │   │   └── journal/route.ts      ← 매매일지 CRUD
 │   ├── layout.tsx
 │   └── globals.css
@@ -130,6 +132,8 @@ RSI(3) >= 30 → WAIT (다음 날 장 마감 후 재확인)
 | 8 | Vercel 배포 | ✅ 완료 |
 | 9 | 스크리닝 시간 제한 | ✅ 완료 |
 | 10 | 볼린저밴드 %B 전략 | ✅ 완료 |
+| 11 | 볼린저 매도 신호 모니터링 | ✅ 완료 |
+| 12 | 볼린저 장중 현재가 확인 | ✅ 완료 |
 
 ## 문서
 

@@ -57,14 +57,14 @@ interface ReasonStats {
 
 interface CumPoint { date: string; cumulative: number }
 
-interface MonthlyPoint { month: string; swing: number; sector: number; total: number }
+interface MonthlyPoint { month: string; swing: number; sector: number; bollinger: number; total: number }
 
 interface AnalysisData {
   empty?: boolean;
   summary: Summary;
   byStrategy: Record<string, StrategyStats>;
   byReason: ReasonStats[];
-  cumulative: { total: CumPoint[]; swing: CumPoint[]; sector: CumPoint[] };
+  cumulative: { total: CumPoint[]; swing: CumPoint[]; sector: CumPoint[]; bollinger: CumPoint[] };
   monthly: MonthlyPoint[];
 }
 
@@ -165,8 +165,8 @@ export default function AnalysisPage() {
           <tbody>
             {Object.entries(byStrategy).map(([strat, s]) => (
               <tr key={strat}>
-                <td style={{ ...S.tdC, color: strat === 'swing' ? '#2e75b6' : '#7030a0', fontWeight: 600 }}>
-                  {strat === 'swing' ? '스윙' : '섹터'}
+                <td style={{ ...S.tdC, color: strat === 'swing' ? '#2e75b6' : strat === 'bollinger' ? '#00695c' : '#7030a0', fontWeight: 600 }}>
+                  {strat === 'swing' ? '스윙' : strat === 'bollinger' ? '볼린저' : '섹터'}
                 </td>
                 <td style={S.td}>{s.trades}건</td>
                 <td style={{ ...S.td, color: s.winRate >= 50 ? '#006100' : '#9c0006', fontWeight: 600 }}>{s.winRate}%</td>

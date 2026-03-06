@@ -46,7 +46,7 @@ export async function GET() {
 
     // ── 전략별 ──
     const byStrategy: Record<string, any> = {};
-    for (const strat of ['swing', 'sector']) {
+    for (const strat of ['swing', 'sector', 'bollinger']) {
       const trades = closed.filter((j: any) => j.strategy === strat);
       if (trades.length === 0) continue;
       const w = trades.filter((j: any) => j.profit_loss > 0);
@@ -86,8 +86,9 @@ export async function GET() {
     // ── 누적 손익 (전략별) ──
     const cumSwing: { date: string; cumulative: number }[] = [];
     const cumSector: { date: string; cumulative: number }[] = [];
+    const cumBollinger: { date: string; cumulative: number }[] = [];
     const cumTotal: { date: string; cumulative: number }[] = [];
-    let runSwing = 0, runSector = 0, runTotal = 0;
+    let runSwing = 0, runSector = 0, runBollinger = 0, runTotal = 0;
     for (const j of closed) {
       const pl = (j as any).profit_loss;
       const d = (j as any).sell_date;
@@ -96,6 +97,9 @@ export async function GET() {
       if ((j as any).strategy === 'swing') {
         runSwing += pl;
         cumSwing.push({ date: d, cumulative: runSwing });
+      } else if ((j as any).strategy === 'bollinger') {
+        runBollinger += pl;
+        cumBollinger.push({ date: d, cumulative: runBollinger });
       } else {
         runSector += pl;
         cumSector.push({ date: d, cumulative: runSector });
@@ -103,23 +107,24 @@ export async function GET() {
     }
 
     // ── 월별 손익 (전략별) ──
-    const monthlyMap = new Map<string, { swing: number; sector: number }>();
+    const monthlyMap = new Map<string, { swing: number; sector: number; bollinger: number }>();
     for (const j of closed) {
       const month = (j as any).sell_date.slice(0, 7);
-      const prev = monthlyMap.get(month) || { swing: 0, sector: 0 };
+      const prev = monthlyMap.get(month) || { swing: 0, sector: 0, bollinger: 0 };
       if ((j as any).strategy === 'swing') prev.swing += (j as any).profit_loss;
+      else if ((j as any).strategy === 'bollinger') prev.bollinger += (j as any).profit_loss;
       else prev.sector += (j as any).profit_loss;
       monthlyMap.set(month, prev);
     }
     const monthly = Array.from(monthlyMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([month, v]) => ({ month, swing: v.swing, sector: v.sector, total: v.swing + v.sector }));
+      .map(([month, v]) => ({ month, swing: v.swing, sector: v.sector, bollinger: v.bollinger, total: v.swing + v.sector + v.bollinger }));
 
     return NextResponse.json({
       summary,
       byStrategy,
       byReason,
-      cumulative: { total: cumTotal, swing: cumSwing, sector: cumSector },
+      cumulative: { total: cumTotal, swing: cumSwing, sector: cumSector, bollinger: cumBollinger },
       monthly,
     });
   } catch (err: any) {
