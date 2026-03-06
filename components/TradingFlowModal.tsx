@@ -82,6 +82,48 @@ function TimeBlock({ time, children }: { time: string; children: React.ReactNode
   );
 }
 
+// ── 좌우 분기 블록 ──
+function BranchBlock({ question, leftLabel, rightLabel, left, right }: {
+  question: string;
+  leftLabel: string;
+  rightLabel: string;
+  left: React.ReactNode;
+  right: React.ReactNode;
+}) {
+  return (
+    <div style={{ border: '1px solid #d4d4d4', borderRadius: 4, overflow: 'hidden' }}>
+      {/* 분기 조건 헤더 */}
+      <div style={{
+        backgroundColor: '#f0f0f0', padding: '4px 8px', fontSize: 11, fontWeight: 700,
+        textAlign: 'center', borderBottom: '1px solid #d4d4d4', color: '#333',
+      }}>
+        {question}
+      </div>
+      {/* 좌우 컬럼 */}
+      <div className="branch-grid">
+        <div className="branch-col-left" style={{ padding: 8 }}>
+          <div style={{
+            backgroundColor: '#e0e0e0', color: '#555', padding: '2px 8px', borderRadius: 2,
+            fontSize: 10, fontWeight: 700, textAlign: 'center', marginBottom: 6,
+          }}>
+            {leftLabel}
+          </div>
+          {left}
+        </div>
+        <div style={{ padding: 8 }}>
+          <div style={{
+            backgroundColor: '#FFFDE7', color: '#bf8f00', padding: '2px 8px', borderRadius: 2,
+            fontSize: 10, fontWeight: 700, textAlign: 'center', marginBottom: 6,
+          }}>
+            {rightLabel}
+          </div>
+          {right}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ActionCard({ borderColor = '#217346', bg = '#fff', children }: { borderColor?: string; bg?: string; children: React.ReactNode }) {
   return (
     <div style={{
@@ -235,46 +277,104 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
 
           {/* 장 마감 후 */}
           <TimeBlock time="장 마감 후 15:40~">
-            <ActionCard>
-              <div><Tag type="bb" label="볼린저" /> <strong>[스크리닝 실행]</strong> — 8개 ETF %B + 거래량 확인</div>
-              <div style={{ paddingLeft: 8 }}>
-                <Yes>BUY: %B &lt; 0.10 AND 거래량 ≥ 1.5배 → 내일 08:50 매수</Yes>
-                <Neutral>WATCH: %B &lt; 0.10 but 거래량 부족 → 관찰만</Neutral>
-                <No>없음 → 내일 다시</No>
-              </div>
-            </ActionCard>
-            <ActionCard borderColor="#283593" bg="#E8EAF6">
-              <div><Tag type="bb" label="볼린저" /> 보유 중 + 장중 미매도 시 → <strong>[매도 신호 확인]</strong></div>
-              <div style={{ paddingLeft: 8 }}>
-                <Yes>%B ≥ 0.5 → 내일 08:50 매도</Yes>
-                <No>%B &lt; 0.5 → 보유 유지</No>
-              </div>
-            </ActionCard>
-            <ActionCard borderColor="#2E7D32" bg="#E8F5E9">
-              <div><Tag type="sec" label="섹터" /> 진입 대기 중이면 → <strong>[RSI 새로고침]</strong></div>
-              <div style={{ paddingLeft: 8 }}>
-                <Yes>RSI &lt; 30 → 내일 08:50 매수</Yes>
-                <No>RSI ≥ 30 → 내일 다시</No>
-                <Neutral>월말 마지막일 → 이번 달 패스</Neutral>
-              </div>
-            </ActionCard>
+            <BranchBlock
+              question="볼린저 보유 종목 있음?"
+              leftLabel="보유 없음"
+              rightLabel="보유 있음"
+              left={
+                <ActionCard>
+                  <div><Tag type="bb" label="볼린저" /> <strong>[스크리닝 실행]</strong></div>
+                  <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                    8개 ETF %B + 거래량 확인
+                    <Yes>BUY → 내일 08:50 매수</Yes>
+                    <Neutral>WATCH → 관찰</Neutral>
+                    <No>없음 → 내일 다시</No>
+                  </div>
+                </ActionCard>
+              }
+              right={
+                <>
+                  <ActionCard>
+                    <div><Tag type="bb" label="볼린저" /> <strong>[스크리닝 실행]</strong></div>
+                    <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                      8개 ETF %B + 거래량 확인
+                      <Yes>BUY → 내일 08:50 매수</Yes>
+                      <Neutral>WATCH → 관찰</Neutral>
+                      <No>없음 → 내일 다시</No>
+                    </div>
+                  </ActionCard>
+                  <div style={{ fontSize: 11, textAlign: 'center', color: '#888', margin: '4px 0' }}>+</div>
+                  <ActionCard borderColor="#283593" bg="#E8EAF6">
+                    <div><Tag type="bb" label="볼린저" /> <strong>[매도 신호 확인]</strong></div>
+                    <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                      <Yes>%B ≥ 0.5 → 내일 08:50 매도</Yes>
+                      <No>%B &lt; 0.5 → 보유 유지</No>
+                    </div>
+                  </ActionCard>
+                </>
+              }
+            />
+            <BranchBlock
+              question="섹터 진입 대기 중?"
+              leftLabel="진입 대기 아님"
+              rightLabel="진입 대기 중"
+              left={
+                <div style={{ fontSize: 11, color: '#888', padding: '8px 4px', textAlign: 'center' }}>
+                  (해당 없음)
+                </div>
+              }
+              right={
+                <ActionCard borderColor="#2E7D32" bg="#E8F5E9">
+                  <div><Tag type="sec" label="섹터" /> <strong>[RSI 새로고침]</strong></div>
+                  <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                    <Yes>RSI &lt; 30 → 내일 08:50 매수</Yes>
+                    <No>RSI ≥ 30 → 내일 재확인</No>
+                    <Neutral>월말 마지막일 → 이번 달 패스</Neutral>
+                  </div>
+                </ActionCard>
+              }
+            />
           </TimeBlock>
 
           {/* 금요일 */}
-          <TimeBlock time="금요일 18:00~">
-            <ActionCard borderColor="#E65100" bg="#FFF3E0">
-              <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong> — 20종목 스코어링</div>
-              <div style={{ paddingLeft: 8 }}>
-                <Yes>PASS + 60↑ → 월요일 08:50 매수</Yes>
-                <No>미달 → 다음 주</No>
-              </div>
-            </ActionCard>
-            <ActionCard borderColor="#E65100" bg="#FFF3E0">
-              <div><Tag type="sw" label="스윙" /> 보유 중이면</div>
-              <div style={{ paddingLeft: 8 }}>
-                <Neutral>익절/손절 미도달 시 15:20 종가 매도 → 매매일지 기록</Neutral>
-              </div>
-            </ActionCard>
+          <TimeBlock time="금요일">
+            <BranchBlock
+              question="스윙 보유 종목 있음?"
+              leftLabel="보유 없음"
+              rightLabel="보유 있음"
+              left={
+                <ActionCard borderColor="#E65100" bg="#FFF3E0">
+                  <div style={{ fontWeight: 700, color: '#E65100', fontSize: 10, marginBottom: 4 }}>18:00~</div>
+                  <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong></div>
+                  <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                    20종목 스코어링
+                    <Yes>PASS + 60↑ → 월요일 매수</Yes>
+                    <No>미달 → 다음 주</No>
+                  </div>
+                </ActionCard>
+              }
+              right={
+                <>
+                  <ActionCard borderColor="#9c0006" bg="#FFEBEE">
+                    <div style={{ fontWeight: 700, color: '#9c0006', fontSize: 10, marginBottom: 4 }}>15:20</div>
+                    <div><Tag type="sw" label="스윙" /> 보유 종목 종가 매도</div>
+                    <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                      <Neutral>매매일지 기록</Neutral>
+                    </div>
+                  </ActionCard>
+                  <div style={{ fontSize: 11, textAlign: 'center', color: '#888', margin: '4px 0' }}>↓</div>
+                  <ActionCard borderColor="#E65100" bg="#FFF3E0">
+                    <div style={{ fontWeight: 700, color: '#E65100', fontSize: 10, marginBottom: 4 }}>18:00~</div>
+                    <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong></div>
+                    <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                      20종목 스코어링
+                      <Yes>PASS + 60↑ → 월요일 매수</Yes>
+                      <No>미달 → 다음 주</No>
+                    </div>
+                  </ActionCard>
+                </>
+              }
+            />
           </TimeBlock>
 
           {/* 매도 이벤트 */}

@@ -147,6 +147,24 @@ html, body {
 .btn-ribbon:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── 모바일 하단 네비게이션 ── */
+/* ── 분기 2컬럼 (운영 플로우 모달) ── */
+.branch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.branch-col-left {
+  border-right: 2px dashed #ccc;
+}
+@media (max-width: 520px) {
+  .branch-grid {
+    grid-template-columns: 1fr;
+  }
+  .branch-col-left {
+    border-right: none;
+    border-bottom: 2px dashed #ccc;
+  }
+}
+
 .mobile-bottom-nav {
   display: none;
 }
