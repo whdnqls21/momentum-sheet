@@ -38,6 +38,8 @@ interface HoldingPrice extends HoldingBase {
   profitRate: number;
   profitLoss: number;
   stopLossNear: boolean;
+  ma20: number | null;
+  aboveMa20: boolean;
   updatedAt: string;
 }
 
@@ -369,9 +371,10 @@ export default function BollingerPage() {
           const price = isPrice ? holding as HoldingPrice : null;
           const isExit = full?.exitSignal === 'EXIT';
           const isStopNear = price?.stopLossNear === true;
-          const cardBg = isExit ? '#FFFDE7' : isStopNear ? '#FFEBEE' : (full || price) ? '#E3F2FD' : '#E3F2FD';
-          const headerBg = isExit ? '#FFFDE7' : isStopNear ? '#ffcdd2' : '#bbdefb';
-          const headerIcon = isStopNear ? '⚠️' : '📈';
+          const isAboveMa20 = price?.aboveMa20 === true;
+          const cardBg = isExit ? '#FFFDE7' : isStopNear ? '#FFEBEE' : isAboveMa20 ? '#FFFDE7' : '#E3F2FD';
+          const headerBg = isExit ? '#FFFDE7' : isStopNear ? '#ffcdd2' : isAboveMa20 ? '#fff9c4' : '#bbdefb';
+          const headerIcon = isStopNear ? '⚠️' : isAboveMa20 ? '🔔' : '📈';
 
           return (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -463,13 +466,34 @@ export default function BollingerPage() {
                               </span>
                             </div>
                           )}
-                          <div style={{
-                            display: 'inline-block', padding: '4px 10px', borderRadius: 4,
-                            backgroundColor: '#e3f2fd', color: '#1565c0', fontWeight: 600, fontSize: 11,
-                            width: 'fit-content', marginTop: 2,
-                          }}>
-                            💡 장중 시세 — %B 매도 신호는 15:40 이후 확인 가능
-                          </div>
+                          {price.ma20 !== null && (
+                            <div style={{ fontSize: 11, color: '#333', marginTop: 2 }}>
+                              MA20: {fmt(price.ma20)}원 | {isAboveMa20
+                                ? <span style={{ color: '#9c0006', fontWeight: 700 }}>✅ 현재가 ≥ MA20 돌파!</span>
+                                : <span style={{ color: '#666' }}>현재가 &lt; MA20</span>}
+                            </div>
+                          )}
+                          {isAboveMa20 ? (
+                            <div style={{
+                              padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 11,
+                              marginTop: 2,
+                            }}>
+                              🔔 즉시 매도 가능 — 한투앱에서 시장가 매도
+                              <br />
+                              <span style={{ fontWeight: 400, fontSize: 10 }}>
+                                (또는 장 마감 후 정식 %B 확인 후 익일 매도)
+                              </span>
+                            </div>
+                          ) : (
+                            <div style={{
+                              display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#e3f2fd', color: '#1565c0', fontWeight: 600, fontSize: 11,
+                              width: 'fit-content', marginTop: 2,
+                            }}>
+                              💡 장중 시세 — 매도 조건 미충족
+                            </div>
+                          )}
                           <div style={{ fontSize: 9, color: '#999' }}>
                             확인시각: {price.updatedAt}
                           </div>

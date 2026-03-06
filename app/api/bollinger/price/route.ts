@@ -84,6 +84,36 @@ export async function GET() {
     const profitLoss = (currentPrice - h.buy_price) * h.buy_qty;
     const stopLossNear = currentPrice > 0 && currentPrice <= h.buy_price * 0.97;
 
+    // 3. 일별시세 조회 (FHKST01010400) → MA20 계산
+    let ma20: number | null = null;
+    let aboveMa20 = false;
+    try {
+      console.log(`[BB Price] 일별시세 조회: ${h.ticker_code} ${h.ticker_name}`);
+      const dailyData = await kisGet(
+        '/uapi/domestic-stock/v1/quotations/inquire-daily-price',
+        KIS_TR_IDS.DAILY_PRICE,
+        {
+          FID_COND_MRKT_DIV_CODE: 'J',
+          FID_INPUT_ISCD: h.ticker_code,
+          FID_INPUT_DATE_1: '',
+          FID_INPUT_DATE_2: '',
+          FID_PERIOD_DIV_CODE: 'D',
+          FID_ORG_ADJ_PRC: '0',
+        }
+      );
+      const dailyList = (dailyData.output || []) as any[];
+      const closes = dailyList
+        .slice(0, 20)
+        .map((d: any) => parseFloat(d.stck_clpr) || 0)
+        .filter((v: number) => v > 0);
+      if (closes.length >= 20) {
+        ma20 = Math.round(closes.reduce((a: number, b: number) => a + b, 0) / 20);
+        aboveMa20 = currentPrice >= ma20;
+      }
+    } catch (err: any) {
+      console.error(`[BB Price] MA20 계산 실패:`, err.message);
+    }
+
     const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const updatedAt = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
 
@@ -100,6 +130,8 @@ export async function GET() {
         profitLoss,
         stopLossPrice,
         stopLossNear,
+        ma20,
+        aboveMa20,
         updatedAt,
       },
     });
