@@ -145,9 +145,9 @@ export async function GET() {
     const currentYear = now.getUTCFullYear();
     const currentMonth = now.getUTCMonth() + 1; // 1~12
 
-    // 타겟 월: 스크리닝은 "다음 달 진입 대상"을 정하는 것
-    const targetMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-    const targetYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+    // 타겟 월: 월초에 실행하므로 현재 월
+    const targetMonth = currentMonth;
+    const targetYear = currentYear;
 
     // Supabase 저장: (strategy, screen_date) 기준 UPSERT — 같은 날 재실행 시 덮어쓰기, 다른 날은 별도 저장
     const screenDate = now.toISOString().slice(0, 10);

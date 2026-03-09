@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getToken, invalidateToken, wasTokenRecentlyIssued } from '@/lib/kis-auth';
 import { acquireSlot } from '@/lib/rate-limiter';
+import { supabase } from '@/lib/supabase';
 import { KIS_BASE_URL, KIS_TR_IDS } from '@/lib/constants';
 import { calculateRSI, getEntrySignal } from '@/lib/rsi';
 
@@ -80,12 +81,41 @@ export async function GET(request: Request) {
     const rsi = calculateRSI(dailyList);
     const signal = getEntrySignal(rsi);
 
-    const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const rsiRounded = rsi !== null ? Math.round(rsi * 10) / 10 : null;
+
+    // screening_history의 1위 ETF RSI 값 업데이트
+    const screenDate = searchParams.get('screen_date');
+    if (screenDate) {
+      const res = await fetch(
+        `${process.env.SUPABASE_URL}/rest/v1/screening_history?strategy=eq.sector&screen_date=eq.${screenDate}&select=id,result`,
+        {
+          headers: {
+            apikey: process.env.SUPABASE_ANON_KEY!,
+            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY!}`,
+            Accept: 'application/json',
+          },
+          cache: 'no-store',
+        }
+      );
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const row = rows[0];
+        const result = Array.isArray(row.result) ? row.result : [];
+        const updated = result.map((etf: any) =>
+          etf.code === code ? { ...etf, rsi: rsiRounded } : etf
+        );
+        await supabase
+          .from('screening_history')
+          .update({ result: updated })
+          .eq('id', row.id);
+        console.log(`[RSI Refresh] DB 업데이트: ${screenDate} / ${code} → RSI ${rsiRounded}`);
+      }
+    }
 
     return NextResponse.json({
-      rsi: rsi !== null ? Math.round(rsi * 10) / 10 : null,
+      rsi: rsiRounded,
       signal,
-      updatedAt: now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+      updatedAt: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }),
     });
   } catch (err: any) {
     console.error('[RSI Refresh] 에러:', err.message);

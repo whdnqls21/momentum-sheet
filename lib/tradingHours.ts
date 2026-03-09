@@ -1,5 +1,6 @@
 /**
  * 현재 KST 시간 기준으로 스크리닝 가능 여부 판단
+ * 모든 전략: 08:00 ~ 08:45 (45분 윈도우)
  */
 
 function getKSTHour(): number {
@@ -12,65 +13,93 @@ function getKSTMinutes(): number {
   return now.getUTCMinutes();
 }
 
+export function getKSTDayOfWeek(): number {
+  const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return now.getUTCDay(); // 0=일, 1=월, ..., 5=금, 6=토
+}
+
 export function canScreenSwing(): { allowed: boolean; reason?: string } {
   const hour = getKSTHour();
-  // 18:00~23:59, 00:00~08:59 허용
-  if (hour >= 18 || hour < 9) {
+  const min = getKSTMinutes();
+  const totalMin = hour * 60 + min;
+  const dayOfWeek = getKSTDayOfWeek();
+
+  // 월요일 08:00 ~ 08:45만 허용
+  if (dayOfWeek !== 1) {
+    return { allowed: false, reason: "월요일 08:00에 스크리닝 가능합니다." };
+  }
+
+  if (totalMin >= 480 && totalMin < 525) {
     return { allowed: true };
   }
-  return {
-    allowed: false,
-    reason: "외국인 수급 데이터가 장 마감 후 확정됩니다. 18:00 이후 스크리닝 가능합니다."
-  };
+
+  if (totalMin < 480) {
+    return { allowed: false, reason: "08:00 이후 스크리닝 가능합니다." };
+  }
+
+  return { allowed: false, reason: "오늘 스크리닝 시간이 지났습니다. 다음 월요일 08:00에 가능합니다." };
 }
 
 export function canScreenSector(): { allowed: boolean; reason?: string } {
   const hour = getKSTHour();
   const min = getKSTMinutes();
-  // 15:40~23:59, 00:00~08:59 허용
-  if (hour >= 16 || (hour === 15 && min >= 40) || hour < 9) {
+  const totalMin = hour * 60 + min;
+
+  // 08:00 ~ 08:45 허용
+  if (totalMin >= 480 && totalMin < 525) {
     return { allowed: true };
   }
-  return {
-    allowed: false,
-    reason: "정규장 종가가 15:30에 확정됩니다. 15:40 이후 스크리닝 가능합니다."
-  };
+
+  if (totalMin < 480) {
+    return { allowed: false, reason: "08:00 이후 스크리닝 가능합니다." };
+  }
+
+  return { allowed: false, reason: "오늘 스크리닝 시간이 지났습니다. 내일 08:00에 다시 가능합니다." };
 }
 
 export function canScreenBollinger(): { allowed: boolean; reason?: string } {
   const hour = getKSTHour();
   const min = getKSTMinutes();
-  // 15:40~23:59, 00:00~08:59 허용 (섹터와 동일)
-  if (hour >= 16 || (hour === 15 && min >= 40) || hour < 9) {
+  const totalMin = hour * 60 + min;
+
+  // 08:00 ~ 08:45 허용
+  if (totalMin >= 480 && totalMin < 525) {
     return { allowed: true };
   }
-  return {
-    allowed: false,
-    reason: "정규장 종가가 15:30에 확정됩니다. 15:40 이후 스크리닝 가능합니다."
-  };
+
+  if (totalMin < 480) {
+    return { allowed: false, reason: "08:00 이후 스크리닝 가능합니다." };
+  }
+
+  return { allowed: false, reason: "오늘 스크리닝 시간이 지났습니다. 내일 08:00에 다시 가능합니다." };
 }
 
-export function canCheckBBExit(): { allowed: boolean; reason?: string } {
+export function canCheckBBHolding(): { allowed: boolean; mode: 'price' | 'exit' } {
+  // 시간 제한 없음 — 언제든 확인 가능
+  // 08:00 이후면 'exit' (%B 포함), 이전이면 'price' (현재가+MA20만)
   const hour = getKSTHour();
   const min = getKSTMinutes();
-  if (hour >= 16 || (hour === 15 && min >= 40) || hour < 9) {
-    return { allowed: true };
+  const totalMin = hour * 60 + min;
+
+  if (totalMin >= 480) {
+    return { allowed: true, mode: 'exit' };
   }
-  return {
-    allowed: false,
-    reason: "당일 종가가 15:30에 확정됩니다. 15:40 이후 매도 신호 확인 가능합니다."
-  };
+  return { allowed: true, mode: 'price' };
 }
 
 export function canRefreshRSI(): { allowed: boolean; reason?: string } {
   const hour = getKSTHour();
   const min = getKSTMinutes();
-  // 15:40~23:59, 00:00~08:59 허용
-  if (hour >= 16 || (hour === 15 && min >= 40) || hour < 9) {
+  const totalMin = hour * 60 + min;
+
+  // 08:00 ~ 08:45 허용
+  if (totalMin >= 480 && totalMin < 525) {
     return { allowed: true };
   }
-  return {
-    allowed: false,
-    reason: "당일 종가가 15:30에 확정됩니다. 15:40 이후 RSI 새로고침 가능합니다."
-  };
+
+  if (totalMin < 480) {
+    return { allowed: false, reason: "08:00 이후 RSI 확인 가능합니다." };
+  }
+
+  return { allowed: false, reason: "오늘 RSI 확인 시간이 지났습니다. 내일 08:00에 다시 가능합니다." };
 }

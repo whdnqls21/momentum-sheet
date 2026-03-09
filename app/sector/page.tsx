@@ -50,7 +50,7 @@ const fmtPct = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
 
 function getEntrySignalLocal(rsi: number | null): EntrySignal {
   if (rsi === null) return 'NO_DATA';
-  if (rsi < 30) return 'BUY';
+  if (rsi < 50) return 'BUY';
   return 'WAIT';
 }
 
@@ -251,7 +251,9 @@ export default function SectorPage() {
     if (!lockedTarget) return;
     setRsiLoading(true);
     try {
-      const res = await fetch(`/api/sector/rsi?code=${lockedTarget.code}`, { cache: 'no-store' });
+      const params = new URLSearchParams({ code: lockedTarget.code });
+      if (selectedDate) params.set('screen_date', selectedDate);
+      const res = await fetch(`/api/sector/rsi?${params}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('RSI 새로고침 실패');
       const data = await res.json();
       setLockedTarget((prev) => prev ? {
@@ -265,7 +267,7 @@ export default function SectorPage() {
     } finally {
       setRsiLoading(false);
     }
-  }, [lockedTarget]);
+  }, [lockedTarget, selectedDate]);
 
   const etfs = result?.etfs || [];
   const sorted = [...etfs].sort((a, b) => b.composite - a.composite);
@@ -428,7 +430,7 @@ export default function SectorPage() {
                             backgroundColor: '#c6efce', color: '#006100', fontWeight: 700, fontSize: 11,
                             width: 'fit-content',
                           }}>
-                            ✅ 진입 가능 — 내일 08:50 매수
+                            ✅ 진입 가능 — 08:50 매수
                           </div>
                         )}
                         {lockedTarget.signal === 'WAIT' && (
@@ -437,7 +439,7 @@ export default function SectorPage() {
                             backgroundColor: '#FFF3E0', color: '#e65100', fontWeight: 700, fontSize: 11,
                             width: 'fit-content',
                           }}>
-                            ⏳ 대기 — RSI {lockedTarget.rsi !== null ? lockedTarget.rsi.toFixed(1) : '—'}, 내일 장 마감 후 재확인
+                            ⏳ 대기 — RSI {lockedTarget.rsi !== null ? lockedTarget.rsi.toFixed(1) : '—'}, 내일 08:00 재확인
                           </div>
                         )}
                         {lockedTarget.signal === 'NO_DATA' && (
@@ -450,7 +452,7 @@ export default function SectorPage() {
                           </div>
                         )}
                         <div style={{ fontSize: 9, color: '#999' }}>
-                          기준: RSI(3) &lt; 30 시 진입 | 월말까지 미달 시 해당 월 패스
+                          기준: RSI(3) &lt; 50 시 진입 | 월말까지 미달 시 해당 월 패스
                         </div>
                       </div>
                     </td>
@@ -520,7 +522,7 @@ export default function SectorPage() {
                         <td style={{
                           ...S.td,
                           fontWeight: 600,
-                          color: etf.rsi != null && etf.rsi < 30 ? '#006100' : etf.rsi != null && etf.rsi >= 70 ? '#9c0006' : '#333',
+                          color: etf.rsi != null && etf.rsi < 50 ? '#006100' : etf.rsi != null && etf.rsi >= 70 ? '#9c0006' : '#333',
                         }}>
                           {etf.rsi != null ? etf.rsi.toFixed(1) : '—'}
                         </td>
@@ -542,7 +544,7 @@ export default function SectorPage() {
                 </tr>
                 <tr>
                   <td style={{ ...S.tdL, color: '#888', fontSize: 10, padding: '2px 8px 6px' }}>
-                    복합점수 = (1M수익률 × 0.6) + (3M수익률 × 0.4) | 진입: RSI(3) &lt; 30
+                    복합점수 = (1M수익률 × 0.6) + (3M수익률 × 0.4) | 진입: RSI(3) &lt; 50
                   </td>
                 </tr>
               </tbody>
@@ -556,7 +558,7 @@ export default function SectorPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <tbody>
             <tr><td colSpan={2} style={RS.header}>기본 정보</td></tr>
-            <tr><td style={RS.label}>주기</td><td style={RS.val}>월 1회 (월말 스크리닝 → 첫 거래일 매수)</td></tr>
+            <tr><td style={RS.label}>주기</td><td style={RS.val}>월 1회 (월초 스크리닝 → RSI 대기 → 08:50 매수)</td></tr>
             <tr><td style={RS.label}>종목풀</td><td style={RS.val}>7개 고정 섹터 ETF: KODEX 반도체, KODEX 자동차, KODEX 은행, KODEX 철강, KODEX 건설, TIGER 2차전지테마, KODEX 바이오</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>선정 기준</td></tr>
@@ -565,8 +567,8 @@ export default function SectorPage() {
             <tr><td style={RS.label}>매수 종목</td><td style={RS.val}>복합점수 1위</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>진입 필터 (RSI)</td></tr>
-            <tr><td style={RS.label}>RSI(3) &lt; 30</td><td style={RS.val}>진입 가능 (다음 날 08:50 매수)</td></tr>
-            <tr><td style={RS.label}>RSI(3) ≥ 30</td><td style={RS.val}>대기 (매일 장 마감 후 재확인)</td></tr>
+            <tr><td style={RS.label}>RSI(3) &lt; 50</td><td style={RS.val}>진입 가능 (08:50 매수)</td></tr>
+            <tr><td style={RS.label}>RSI(3) ≥ 50</td><td style={RS.val}>대기 (매일 08:00 재확인)</td></tr>
             <tr><td style={RS.label}>월말까지 미달</td><td style={RS.val}>해당 월 패스 (현금 유지)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매매 규칙</td></tr>

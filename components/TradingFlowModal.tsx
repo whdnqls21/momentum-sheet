@@ -245,135 +245,17 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
             운영 타임라인
           </div>
 
-          {/* 매수일 */}
-          <TimeBlock time="매수일 08:50">
-            <BranchBlock
-              question="전일 스크리닝 완료?"
-              leftLabel="미완료"
-              rightLabel="완료"
-              wideRight
-              left={
-                <ActionCard borderColor="#9c0006" bg="#FFEBEE">
-                  <div style={{ fontWeight: 700, color: '#9c0006' }}>⚠ 스크리닝 미실행</div>
-                  <div style={{ marginTop: 4 }}>매수 불가</div>
-                  <div style={{ marginTop: 2, color: '#666' }}>오늘 장 마감 후 스크리닝 실행</div>
-                </ActionCard>
-              }
-              right={
-                <BranchBlock
-                  question="매수 신호 있음?"
-                  leftLabel="없음"
-                  rightLabel="있음"
-                  wideRight
-                  left={
-                    <div style={{ fontSize: 11, color: '#888', padding: '6px 4px' }}>
-                      매수 없음<br />일반 루틴 진행
-                    </div>
-                  }
-                  right={
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 11, marginBottom: 6 }}>어떤 전략?</div>
-                      <div className="branch-grid-3col" style={{ gap: 4 }}>
-                        {/* 스윙 */}
-                        <div style={{ border: '1px solid #E65100', borderRadius: 4, overflow: 'hidden' }}>
-                          <div style={{ backgroundColor: '#FFF3E0', color: '#E65100', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
-                            스윙
-                          </div>
-                          <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
-                            37.5% (고정)<br />
-                            시장가 매수<br />
-                            손절 -3%
-                          </div>
-                        </div>
-                        {/* 섹터 */}
-                        <div style={{ border: '1px solid #2E7D32', borderRadius: 4, overflow: 'hidden' }}>
-                          <div style={{ backgroundColor: '#E8F5E9', color: '#2E7D32', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
-                            섹터
-                          </div>
-                          <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
-                            볼린저 보유?<br />
-                            Y→31.25%<br />
-                            N→50%<br />
-                            손절 -5%
-                          </div>
-                        </div>
-                        {/* 볼린저 */}
-                        <div style={{ border: '1px solid #283593', borderRadius: 4, overflow: 'hidden' }}>
-                          <div style={{ backgroundColor: '#E8EAF6', color: '#283593', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
-                            볼린저
-                          </div>
-                          <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
-                            섹터 보유?<br />
-                            Y→31.25%<br />
-                            N→50%<br />
-                            손절 -5%
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ marginTop: 6, fontSize: 10, color: '#555', borderTop: '1px solid #e0e0e0', paddingTop: 4 }}>
-                        한투앱 시장가 매수 (08:50 접수)<br />
-                        즉시 손절 지정가 등록<br />
-                        매매일지 매수 기록
-                      </div>
-                    </div>
-                  }
-                />
-              }
-            />
-          </TimeBlock>
-
-          {/* 장중 */}
-          <TimeBlock time="장중 09:00~15:30">
-            <ActionCard borderColor="#283593" bg="#E8EAF6">
-              <div><Tag type="bb" label="볼린저" /> 보유 종목 있으면</div>
-              <div style={{ paddingLeft: 8 }}>
-                → <strong>[현재가 확인]</strong> (시간 제한 없음)
-                <Yes>현재가 ≥ MA20 → 즉시 매도 가능 (한투앱 시장가 매도)</Yes>
-                <Neutral>현재가 &lt; MA20 → 보유 유지</Neutral>
-                <Warn>-3%↓ → 손절가 근접 경고</Warn>
+          {/* 매일 아침 */}
+          <TimeBlock time="매일 08:00~08:45">
+            <ActionCard>
+              <div><Tag type="bb" label="볼린저" /> <strong>[스크리닝 실행]</strong></div>
+              <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                8개 ETF %B + 거래량 확인
+                <Yes>BUY → 08:50 시장가 매수</Yes>
+                <Neutral>WATCH → 관찰</Neutral>
+                <No>없음 → 내일 다시</No>
               </div>
             </ActionCard>
-          </TimeBlock>
-
-          {/* 장 마감 후 */}
-          <TimeBlock time="장 마감 후 15:40~">
-            <BranchBlock
-              question="볼린저 보유 종목 있음?"
-              leftLabel="보유 없음"
-              rightLabel="보유 있음"
-              left={
-                <ActionCard>
-                  <div><Tag type="bb" label="볼린저" /> <strong>[스크리닝 실행]</strong></div>
-                  <div style={{ paddingLeft: 8, marginTop: 2 }}>
-                    8개 ETF %B + 거래량 확인
-                    <Yes>BUY → 내일 08:50 매수</Yes>
-                    <Neutral>WATCH → 관찰</Neutral>
-                    <No>없음 → 내일 다시</No>
-                  </div>
-                </ActionCard>
-              }
-              right={
-                <>
-                  <ActionCard>
-                    <div><Tag type="bb" label="볼린저" /> <strong>[스크리닝 실행]</strong></div>
-                    <div style={{ paddingLeft: 8, marginTop: 2 }}>
-                      8개 ETF %B + 거래량 확인
-                      <Yes>BUY → 내일 08:50 매수</Yes>
-                      <Neutral>WATCH → 관찰</Neutral>
-                      <No>없음 → 내일 다시</No>
-                    </div>
-                  </ActionCard>
-                  <div style={{ fontSize: 11, textAlign: 'center', color: '#888', margin: '4px 0' }}>+</div>
-                  <ActionCard borderColor="#283593" bg="#E8EAF6">
-                    <div><Tag type="bb" label="볼린저" /> <strong>[매도 신호 확인]</strong></div>
-                    <div style={{ paddingLeft: 8, marginTop: 2 }}>
-                      <Yes>%B ≥ 0.5 → 내일 08:50 매도</Yes>
-                      <No>%B &lt; 0.5 → 보유 유지</No>
-                    </div>
-                  </ActionCard>
-                </>
-              }
-            />
             <BranchBlock
               question="섹터 진입 대기 중?"
               leftLabel="진입 대기 아님"
@@ -387,8 +269,8 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
                 <ActionCard borderColor="#2E7D32" bg="#E8F5E9">
                   <div><Tag type="sec" label="섹터" /> <strong>[RSI 새로고침]</strong></div>
                   <div style={{ paddingLeft: 8, marginTop: 2 }}>
-                    <Yes>RSI &lt; 30 → 내일 08:50 매수</Yes>
-                    <No>RSI ≥ 30 → 내일 재확인</No>
+                    <Yes>RSI &lt; 50 → 08:50 매수</Yes>
+                    <No>RSI ≥ 50 → 내일 재확인</No>
                     <Neutral>월말 마지막일 → 이번 달 패스</Neutral>
                   </div>
                 </ActionCard>
@@ -396,45 +278,117 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
             />
           </TimeBlock>
 
-          {/* 금요일 */}
-          <TimeBlock time="금요일">
+          {/* 08:50 매수 */}
+          <TimeBlock time="08:50 매수">
+            <BranchBlock
+              question="매수 신호 있음?"
+              leftLabel="없음"
+              rightLabel="있음"
+              left={
+                <div style={{ fontSize: 11, color: '#888', padding: '6px 4px' }}>
+                  매수 없음<br />일반 루틴 진행
+                </div>
+              }
+              right={
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 11, marginBottom: 6 }}>어떤 전략?</div>
+                  <div className="branch-grid-3col" style={{ gap: 4 }}>
+                    {/* 스윙 */}
+                    <div style={{ border: '1px solid #E65100', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{ backgroundColor: '#FFF3E0', color: '#E65100', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
+                        스윙
+                      </div>
+                      <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
+                        37.5% (고정)<br />
+                        시장가 매수<br />
+                        손절 -3%
+                      </div>
+                    </div>
+                    {/* 섹터 */}
+                    <div style={{ border: '1px solid #2E7D32', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{ backgroundColor: '#E8F5E9', color: '#2E7D32', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
+                        섹터
+                      </div>
+                      <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
+                        볼린저 보유?<br />
+                        Y→31.25%<br />
+                        N→50%<br />
+                        손절 -5%
+                      </div>
+                    </div>
+                    {/* 볼린저 */}
+                    <div style={{ border: '1px solid #283593', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{ backgroundColor: '#E8EAF6', color: '#283593', fontWeight: 700, fontSize: 10, textAlign: 'center', padding: '2px 0' }}>
+                        볼린저
+                      </div>
+                      <div style={{ padding: '4px 6px', fontSize: 10, lineHeight: 1.6 }}>
+                        섹터 보유?<br />
+                        Y→31.25%<br />
+                        N→50%<br />
+                        손절 -5%
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 6, fontSize: 10, color: '#555', borderTop: '1px solid #e0e0e0', paddingTop: 4 }}>
+                    한투앱 시장가 매수 (08:50 접수)<br />
+                    즉시 손절 지정가 등록<br />
+                    매매일지 매수 기록
+                  </div>
+                </div>
+              }
+            />
+          </TimeBlock>
+
+          {/* 장중 */}
+          <TimeBlock time="장중 09:00~15:30">
+            <ActionCard borderColor="#283593" bg="#E8EAF6">
+              <div><Tag type="bb" label="볼린저" /> 보유 종목 있으면</div>
+              <div style={{ paddingLeft: 8 }}>
+                → <strong>[보유종목 확인]</strong> (시간 제한 없음)
+                <Yes>현재가 ≥ MA20 → 즉시 매도 가능 (한투앱 시장가 매도)</Yes>
+                <Neutral>현재가 &lt; MA20 → 보유 유지</Neutral>
+                <Warn>-3%↓ → 손절가 근접 경고</Warn>
+              </div>
+            </ActionCard>
+          </TimeBlock>
+
+          {/* 월요일 */}
+          <TimeBlock time="월요일 08:00~08:45">
             <BranchBlock
               question="스윙 보유 종목 있음?"
               leftLabel="보유 없음"
-              rightLabel="보유 있음"
+              rightLabel="보유 있음 (금 15:20 매도됨)"
               left={
                 <ActionCard borderColor="#E65100" bg="#FFF3E0">
-                  <div style={{ fontWeight: 700, color: '#E65100', fontSize: 10, marginBottom: 4 }}>18:00~</div>
                   <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong></div>
                   <div style={{ paddingLeft: 8, marginTop: 2 }}>
                     20종목 스코어링
-                    <Yes>PASS + 60↑ → 월요일 매수</Yes>
+                    <Yes>PASS + 60↑ → 08:50 매수</Yes>
                     <No>미달 → 다음 주</No>
                   </div>
                 </ActionCard>
               }
               right={
-                <>
-                  <ActionCard borderColor="#9c0006" bg="#FFEBEE">
-                    <div style={{ fontWeight: 700, color: '#9c0006', fontSize: 10, marginBottom: 4 }}>15:20</div>
-                    <div><Tag type="sw" label="스윙" /> 보유 종목 종가 매도</div>
-                    <div style={{ paddingLeft: 8, marginTop: 2 }}>
-                      <Neutral>매매일지 기록</Neutral>
-                    </div>
-                  </ActionCard>
-                  <div style={{ fontSize: 11, textAlign: 'center', color: '#888', margin: '4px 0' }}>↓</div>
-                  <ActionCard borderColor="#E65100" bg="#FFF3E0">
-                    <div style={{ fontWeight: 700, color: '#E65100', fontSize: 10, marginBottom: 4 }}>18:00~</div>
-                    <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong></div>
-                    <div style={{ paddingLeft: 8, marginTop: 2 }}>
-                      20종목 스코어링
-                      <Yes>PASS + 60↑ → 월요일 매수</Yes>
-                      <No>미달 → 다음 주</No>
-                    </div>
-                  </ActionCard>
-                </>
+                <ActionCard borderColor="#E65100" bg="#FFF3E0">
+                  <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong></div>
+                  <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                    20종목 스코어링
+                    <Yes>PASS + 60↑ → 08:50 매수</Yes>
+                    <No>미달 → 다음 주</No>
+                  </div>
+                </ActionCard>
               }
             />
+          </TimeBlock>
+
+          {/* 금요일 매도 */}
+          <TimeBlock time="금요일 15:20">
+            <ActionCard borderColor="#9c0006" bg="#FFEBEE">
+              <div><Tag type="sw" label="스윙" /> 보유 종목 종가 매도</div>
+              <div style={{ paddingLeft: 8, marginTop: 2 }}>
+                <Neutral>매매일지 기록</Neutral>
+              </div>
+            </ActionCard>
           </TimeBlock>
 
           {/* 매도 이벤트 */}
@@ -462,15 +416,15 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
             </ActionCard>
           </TimeBlock>
 
-          {/* 매월 말 */}
-          <TimeBlock time="매월 말 15:40~">
+          {/* 매월 초 */}
+          <TimeBlock time="매월 초 08:00~">
             <ActionCard borderColor="#2E7D32" bg="#E8F5E9">
-              <div><Tag type="sec" label="섹터" /> 보유 중이면 → 15:20 종가 매도 → 매매일지 기록</div>
+              <div><Tag type="sec" label="섹터" /> 보유 중이면 → 전월 말 15:20 종가 매도 → 매매일지 기록</div>
               <div style={{ marginTop: 4 }}>
                 <Tag type="sec" label="섹터" /> <strong>[섹터 스크리닝]</strong> → 1위 ETF 확정
               </div>
               <div style={{ paddingLeft: 8 }}>
-                → 이후 매일 RSI 새로고침으로 진입 대기
+                → 이후 매일 08:00 RSI 새로고침으로 진입 대기
               </div>
             </ActionCard>
           </TimeBlock>

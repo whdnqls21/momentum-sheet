@@ -79,13 +79,13 @@ export async function GET() {
         .eq('strategy', 'swing')
         .gte('screen_date', kst.mondayStr)
         .limit(1),
-      // 섹터: month_num = 현재월 (타겟 월 기준)
+      // 섹터: month_num = 현재월 (월초에 실행하므로)
       supabase
         .from('screening_history')
         .select('id, screen_date, selected_ticker, selected_name')
         .eq('strategy', 'sector')
         .eq('year', kst.year)
-        .eq('month_num', kst.month + 1)
+        .eq('month_num', kst.month + 1) // getUTCMonth() is 0-based, month_num is 1-based
         .limit(1),
       supabase
         .from('screening_history')
@@ -125,25 +125,13 @@ export async function GET() {
       });
     }
 
-    // ── 볼린저 루틴 ──
-    // 보유 중이면 장중 현재가 확인
-    if (holdings.bollinger) {
-      routines.push({
-        time: '09:00~15:30',
-        tag: 'bb',
-        label: '볼린저',
-        action: '[현재가 확인] MA20 돌파 확인',
-        sheet: '볼린저',
-        sheetPath: '/bollinger',
-        done: false,
-        highlight: false,
-      });
-    }
+    const isMonday = kst.day === 1;
 
-    // 볼린저 스크리닝 (매일)
+    // ── 볼린저 루틴 ──
+    // 볼린저 스크리닝 (매일 08:00~)
     if (screeningStatus.bollinger.done) {
       routines.push({
-        time: '15:40~',
+        time: '08:00~',
         tag: 'bb',
         label: '볼린저',
         action: '✅ 볼린저 스크리닝 완료',
@@ -154,10 +142,10 @@ export async function GET() {
       });
     } else {
       routines.push({
-        time: '15:40~',
+        time: '08:00~',
         tag: 'bb',
         label: '볼린저',
-        action: '⚠ [스크리닝 실행] 매수 신호 확인',
+        action: '⚠ [스크리닝 실행] 매수 신호 확인 → 08:50 매수',
         sheet: '볼린저',
         sheetPath: '/bollinger',
         done: false,
@@ -166,13 +154,13 @@ export async function GET() {
       });
     }
 
-    // 볼린저 보유 중 매도 신호 확인
+    // 보유 중이면 보유종목 확인 (장중)
     if (holdings.bollinger) {
       routines.push({
-        time: '15:40~',
+        time: '장중',
         tag: 'bb',
         label: '볼린저',
-        action: '[매도 신호 확인] %B ≥ 0.5 확인',
+        action: '[보유종목 확인] MA20 돌파 / %B 확인',
         sheet: '볼린저',
         sheetPath: '/bollinger',
         done: false,
@@ -184,7 +172,7 @@ export async function GET() {
     // 이번 달 타겟 없음 → 스크리닝 필요
     if (!screeningStatus.sector.done && !holdings.sector) {
       routines.push({
-        time: '15:40~',
+        time: '08:00~',
         tag: 'sec',
         label: '섹터',
         action: `⚠ [섹터 스크리닝] ${kst.month + 1}월 진입 대상 확정`,
@@ -199,10 +187,10 @@ export async function GET() {
     // 타겟 있음 + 미보유 → RSI 대기
     if (screeningStatus.sector.done && !holdings.sector && screeningStatus.sector.selectedName) {
       routines.push({
-        time: '15:40~',
+        time: '08:00~',
         tag: 'sec',
         label: '섹터',
-        action: `[RSI 새로고침] RSI < 30 확인 (${screeningStatus.sector.selectedName})`,
+        action: `[RSI 새로고침] RSI < 50 확인 → 08:50 매수 (${screeningStatus.sector.selectedName})`,
         sheet: '섹터로테이션',
         sheetPath: '/sector',
         done: false,
@@ -242,23 +230,23 @@ export async function GET() {
     // 스윙 스크리닝 상태
     if (screeningStatus.swing.done) {
       routines.push({
-        time: '금 18:00~',
+        time: '월 08:00~',
         tag: 'sw',
         label: '스윙',
         action: screeningStatus.swing.selectedName
-          ? `✅ 이번 주 완료: ${screeningStatus.swing.selectedName} — 월요일 매수`
+          ? `✅ 이번 주 완료: ${screeningStatus.swing.selectedName} — 08:50 매수`
           : '✅ 이번 주 완료: 매수 후보 없음',
         sheet: '단기스윙',
         sheetPath: '/swing',
         done: true,
         highlight: false,
       });
-    } else if (kst.isFriday) {
+    } else if (isMonday) {
       routines.push({
-        time: '18:00~',
+        time: '08:00~',
         tag: 'sw',
         label: '스윙',
-        action: '⚠ [스크리닝 실행] PASS+60↑ 확인',
+        action: '⚠ [스크리닝 실행] PASS+60↑ 확인 → 08:50 매수',
         sheet: '단기스윙',
         sheetPath: '/swing',
         done: false,
@@ -267,7 +255,7 @@ export async function GET() {
       });
     } else {
       routines.push({
-        time: '금 18:00~',
+        time: '월 08:00~',
         tag: 'sw',
         label: '스윙',
         action: '⚠ 스윙 스크리닝 필요',
@@ -281,11 +269,10 @@ export async function GET() {
 
     // 시간순 정렬
     const timeOrder: Record<string, number> = {
-      '09:00~15:30': 1,
-      '15:20': 2,
-      '15:40~': 3,
-      '18:00~': 4,
-      '금 18:00~': 5,
+      '08:00~': 1,
+      '월 08:00~': 1,
+      '장중': 2,
+      '15:20': 3,
     };
     routines.sort((a, b) => (timeOrder[a.time] || 99) - (timeOrder[b.time] || 99));
 

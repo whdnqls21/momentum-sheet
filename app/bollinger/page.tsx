@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
 import StrategyRulesModal from '@/components/StrategyRulesModal';
-import { canScreenBollinger, canCheckBBExit } from '@/lib/tradingHours';
+import { canScreenBollinger } from '@/lib/tradingHours';
 import type { BBSignal } from '@/lib/bollinger';
 
 interface BBETFResult {
@@ -62,6 +62,10 @@ interface HistoryOption {
 
 const fmt = (n: number) => n.toLocaleString();
 
+function getTodayKST(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
+}
+
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 function fmtOption(h: HistoryOption): string {
   const d = new Date(h.screen_date + 'T00:00:00');
@@ -119,15 +123,18 @@ export default function BollingerPage() {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [timeStatus, setTimeStatus] = useState(canScreenBollinger());
   const [holding, setHolding] = useState<HoldingBase | HoldingPrice | HoldingFull | null>(null);
-  const [priceLoading, setPriceLoading] = useState(false);
-  const [exitLoading, setExitLoading] = useState(false);
-  const [exitTimeStatus, setExitTimeStatus] = useState(canCheckBBExit());
+  const [holdingCheckLoading, setHoldingCheckLoading] = useState(false);
+  const [todayKST, setTodayKST] = useState(() => getTodayKST());
 
-  // 1분마다 시간 체크
+  // 파생: 오늘 스크리닝 완료 여부
+  const screenedToday = history.some(h => h.screen_date === todayKST);
+  const todayEntry = history.find(h => h.screen_date === todayKST);
+
+  // 1분마다 시간 체크 + 날짜 변경 감지
   useEffect(() => {
     const check = () => {
       setTimeStatus(canScreenBollinger());
-      setExitTimeStatus(canCheckBBExit());
+      setTodayKST(getTodayKST());
     };
     const interval = setInterval(check, 60000);
     return () => clearInterval(interval);
@@ -193,35 +200,32 @@ export default function BollingerPage() {
       .catch(() => {});
   }, []);
 
-  // 장중 현재가 확인
-  const handlePriceCheck = useCallback(async () => {
+  // 보유종목 확인 (통합: 08:00 이전→price, 08:00 이후→exit)
+  const handleHoldingCheck = useCallback(async () => {
     if (!holding) return;
-    setPriceLoading(true);
+    setHoldingCheckLoading(true);
+    setError(null);
     try {
-      const res = await fetch('/api/bollinger/price', { cache: 'no-store' });
-      if (!res.ok) throw new Error('현재가 조회 실패');
-      const data = await res.json();
-      if (data.holding) setHolding(data.holding);
-    } catch {
-      // ignore
-    } finally {
-      setPriceLoading(false);
-    }
-  }, [holding]);
+      const kstStr = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Seoul', hour12: false });
+      const [h, m] = kstStr.split(':').map(Number);
+      const totalMin = h * 60 + m;
+      const isAfter0800 = totalMin >= 480;
 
-  // 매도 신호 확인
-  const handleExitCheck = useCallback(async () => {
-    if (!holding) return;
-    setExitLoading(true);
-    try {
-      const res = await fetch('/api/bollinger/exit?refresh=true', { cache: 'no-store' });
-      if (!res.ok) throw new Error('매도 신호 확인 실패');
-      const data = await res.json();
-      if (data.holding) setHolding(data.holding);
-    } catch {
-      // ignore
+      if (isAfter0800) {
+        const res = await fetch('/api/bollinger/exit?refresh=true', { cache: 'no-store' });
+        if (!res.ok) throw new Error('매도 신호 확인 실패');
+        const data = await res.json();
+        if (data.holding) setHolding(data.holding);
+      } else {
+        const res = await fetch('/api/bollinger/price', { cache: 'no-store' });
+        if (!res.ok) throw new Error('현재가 조회 실패');
+        const data = await res.json();
+        if (data.holding) setHolding(data.holding);
+      }
+    } catch (err: any) {
+      setError(err.message);
     } finally {
-      setExitLoading(false);
+      setHoldingCheckLoading(false);
     }
   }, [holding]);
 
@@ -263,6 +267,14 @@ export default function BollingerPage() {
     ? { count: String(etfs.length), sum: result.buyCandidate?.name || '신호 없음' }
     : undefined;
 
+  // 스크리닝 버튼 disabled 사유
+  const screenDisabled = loading || !timeStatus.allowed || screenedToday || !!holding;
+  const screenTitle = screenedToday
+    ? '오늘 스크리닝 완료'
+    : holding
+      ? '보유 종목 있음'
+      : timeStatus.reason;
+
   return (
     <ExcelFrame statusItems={statusItems}>
       <div style={{ padding: 0 }}>
@@ -294,29 +306,20 @@ export default function BollingerPage() {
                   <button
                     className="btn-ribbon"
                     onClick={handleRun}
-                    disabled={loading || !timeStatus.allowed}
-                    title={timeStatus.reason}
-                    style={loading ? { backgroundColor: '#e2efda' } : !timeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                    disabled={screenDisabled}
+                    title={screenTitle}
+                    style={loading ? { backgroundColor: '#e2efda' } : screenDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
                   </button>
                   <button
                     className="btn-ribbon"
-                    onClick={handlePriceCheck}
-                    disabled={priceLoading || !holding}
+                    onClick={handleHoldingCheck}
+                    disabled={holdingCheckLoading || !holding}
                     title={!holding ? '보유 종목 없음' : undefined}
-                    style={priceLoading ? { backgroundColor: '#e2efda' } : !holding ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                    style={holdingCheckLoading ? { backgroundColor: '#e2efda' } : !holding ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
-                    {priceLoading ? '⏳ 조회 중...' : '📊 현재가 확인'}
-                  </button>
-                  <button
-                    className="btn-ribbon"
-                    onClick={handleExitCheck}
-                    disabled={exitLoading || !holding || !exitTimeStatus.allowed}
-                    title={!holding ? '보유 종목 없음' : exitTimeStatus.reason}
-                    style={exitLoading ? { backgroundColor: '#e2efda' } : (!holding || !exitTimeStatus.allowed) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                  >
-                    {exitLoading ? '⏳ 확인 중...' : '📉 매도 신호 확인'}
+                    {holdingCheckLoading ? '⏳ 확인 중...' : '📉 보유종목 확인'}
                   </button>
                   <select
                     value={selectedDate}
@@ -347,9 +350,23 @@ export default function BollingerPage() {
         </table>
         </div>
 
-        {!timeStatus.allowed && (
+        {!timeStatus.allowed && !screenedToday && !holding && (
           <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10 }}>
             ⚠ {timeStatus.reason}
+          </div>
+        )}
+
+        {/* ── 스크리닝 상태 메시지 ── */}
+        {!loading && screenedToday && (
+          <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
+            {todayEntry?.selected_name
+              ? `✅ 오늘 완료 — BUY: ${todayEntry.selected_name}`
+              : '✅ 오늘 완료 — 매수 신호 없음'}
+          </div>
+        )}
+        {!loading && !screenedToday && !!holding && (
+          <div style={{ padding: '4px 12px', color: '#bf8f00', fontSize: 10, fontWeight: 600 }}>
+            보유 종목 있음 — 매도 후 스크리닝 가능
           </div>
         )}
 
@@ -373,10 +390,11 @@ export default function BollingerPage() {
           const price = isPrice ? holding as HoldingPrice : null;
           const isExit = full?.exitSignal === 'EXIT';
           const isStopNear = price?.stopLossNear === true;
+          const fullStopNear = full ? full.currentPrice <= holding.buyPrice * 0.97 : false;
           const isAboveMa20 = price?.aboveMa20 === true;
-          const cardBg = isExit ? '#FFFDE7' : isStopNear ? '#FFEBEE' : isAboveMa20 ? '#FFFDE7' : '#E3F2FD';
-          const headerBg = isExit ? '#FFFDE7' : isStopNear ? '#ffcdd2' : isAboveMa20 ? '#fff9c4' : '#bbdefb';
-          const headerIcon = isStopNear ? '⚠️' : isAboveMa20 ? '🔔' : '📈';
+          const cardBg = isExit ? '#FFFDE7' : (fullStopNear || isStopNear) ? '#FFEBEE' : isAboveMa20 ? '#FFFDE7' : '#E3F2FD';
+          const headerBg = isExit ? '#FFFDE7' : (fullStopNear || isStopNear) ? '#ffcdd2' : isAboveMa20 ? '#fff9c4' : '#bbdefb';
+          const headerIcon = (fullStopNear || isStopNear) ? '⚠️' : (isExit || isAboveMa20) ? '🔔' : '📈';
 
           return (
             <div style={{ overflowX: 'auto' }}>
@@ -394,7 +412,7 @@ export default function BollingerPage() {
                       {full ? (
                         <>
                           <div style={{ fontSize: 11, color: '#333' }}>
-                            매수가: {fmt(holding.buyPrice)}원 | 현재가: {fmt(full.currentPrice)}원
+                            매수가: {fmt(holding.buyPrice)}원 | 종가: {fmt(full.currentPrice)}원
                             <span style={{
                               marginLeft: 6,
                               fontWeight: 700,
@@ -406,19 +424,34 @@ export default function BollingerPage() {
                           <div style={{ fontSize: 11, color: full.profitLoss >= 0 ? '#006100' : '#9c0006', fontWeight: 600 }}>
                             평가손익: {full.profitLoss >= 0 ? '+' : ''}{fmt(full.profitLoss)}원
                           </div>
-                          <div style={{ fontSize: 10, color: '#666' }}>
-                            손절가: {fmt(holding.stopLossPrice)}원 (-5%)
-                          </div>
                           <div style={{ fontSize: 12, fontWeight: 700, marginTop: 2 }}>
                             %B: {full.percentB !== null ? full.percentB.toFixed(3) : '—'}
                           </div>
+                          {full.bb && (
+                            <div style={{ fontSize: 10, color: '#888' }}>
+                              밴드: 하단 {fmt(full.bb.lower)} | MA20 {fmt(full.bb.middle)} | 상단 {fmt(full.bb.upper)}
+                            </div>
+                          )}
+                          {/* MA20 비교 */}
+                          {full.bb && (() => {
+                            const ma20 = full.bb.middle;
+                            const diff = full.currentPrice - ma20;
+                            const diffPct = (diff / ma20 * 100);
+                            const diffSign = diff >= 0 ? '+' : '';
+                            const diffColor = diff >= 0 ? '#006100' : '#9c0006';
+                            return (
+                              <div style={{ fontSize: 11, color: diffColor, fontWeight: 600 }}>
+                                종가 {fmt(full.currentPrice)}원 {diff >= 0 ? '>' : '<'} MA20 {fmt(ma20)}원 ({diffSign}{fmt(diff)}원, {diffSign}{diffPct.toFixed(2)}%)
+                              </div>
+                            );
+                          })()}
                           {isExit ? (
                             <div style={{
                               display: 'inline-block', padding: '4px 10px', borderRadius: 4,
                               backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 11,
                               width: 'fit-content',
                             }}>
-                              🔔 익절 신호! — 익일 08:50 시장가 매도
+                              🔔 익절 신호 (%B ≥ 0.5) — 08:50 시장가 매도
                             </div>
                           ) : (
                             <div style={{
@@ -429,9 +462,19 @@ export default function BollingerPage() {
                               ⏳ 보유 유지 — %B ≥ 0.5 시 매도
                             </div>
                           )}
-                          {full.bb && (
-                            <div style={{ fontSize: 10, color: '#888' }}>
-                              밴드: 하단 {fmt(full.bb.lower)} | 중심 {fmt(full.bb.middle)} | 상단 {fmt(full.bb.upper)}
+                          <div style={{ fontSize: 10, color: '#666' }}>
+                            손절가: {fmt(holding.stopLossPrice)}원 (-5%)
+                          </div>
+                          {fullStopNear && (
+                            <div style={{
+                              padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 11,
+                            }}>
+                              🚨 손절가 근접! 종가와 손절가 차이: {fmt(full.currentPrice - holding.stopLossPrice)}원 ({((full.currentPrice - holding.stopLossPrice) / holding.stopLossPrice * 100).toFixed(1)}%)
+                              <br />
+                              <span style={{ fontWeight: 400, fontSize: 10 }}>
+                                손절 지정가 주문이 등록되어 있는지 확인하세요.
+                              </span>
                             </div>
                           )}
                           <div style={{ fontSize: 9, color: '#999' }}>
@@ -453,7 +496,45 @@ export default function BollingerPage() {
                           <div style={{ fontSize: 11, color: price.profitLoss >= 0 ? '#006100' : '#9c0006', fontWeight: 600 }}>
                             평가손익: {price.profitLoss >= 0 ? '+' : ''}{fmt(price.profitLoss)}원
                           </div>
-                          <div style={{ fontSize: 10, color: '#666' }}>
+                          {/* MA20 상세 */}
+                          {price.ma20 !== null && (() => {
+                            const diff = price.currentPrice - price.ma20;
+                            const diffPct = (diff / price.ma20 * 100);
+                            const diffSign = diff >= 0 ? '+' : '';
+                            const diffColor = diff >= 0 ? '#006100' : '#9c0006';
+                            return (
+                              <>
+                                <div style={{ fontSize: 11, color: '#333' }}>
+                                  MA20: {fmt(price.ma20)}원
+                                </div>
+                                <div style={{ fontSize: 11, color: diffColor, fontWeight: 600 }}>
+                                  현재가 {fmt(price.currentPrice)}원 {diff >= 0 ? '>' : '<'} MA20 {fmt(price.ma20)}원 ({diffSign}{fmt(diff)}원, {diffSign}{diffPct.toFixed(2)}%)
+                                </div>
+                              </>
+                            );
+                          })()}
+                          {isAboveMa20 ? (
+                            <div style={{
+                              padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 11,
+                              marginTop: 2,
+                            }}>
+                              ✅ MA20 돌파 — 즉시 매도 가능
+                              <br />
+                              <span style={{ fontWeight: 400, fontSize: 10 }}>
+                                한투앱에서 시장가 매도 (또는 08:00 이후 %B 확인 후 매도)
+                              </span>
+                            </div>
+                          ) : (
+                            <div style={{
+                              display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#e3f2fd', color: '#1565c0', fontWeight: 600, fontSize: 11,
+                              width: 'fit-content', marginTop: 2,
+                            }}>
+                              ⏳ MA20 미돌파 — 보유 유지
+                            </div>
+                          )}
+                          <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>
                             손절가: {fmt(holding.stopLossPrice)}원 (-5%)
                           </div>
                           {isStopNear && (
@@ -469,35 +550,7 @@ export default function BollingerPage() {
                               </span>
                             </div>
                           )}
-                          {price.ma20 !== null && (
-                            <div style={{ fontSize: 11, color: '#333', marginTop: 2 }}>
-                              MA20: {fmt(price.ma20)}원 | {isAboveMa20
-                                ? <span style={{ color: '#9c0006', fontWeight: 700 }}>✅ 현재가 ≥ MA20 돌파!</span>
-                                : <span style={{ color: '#666' }}>현재가 &lt; MA20</span>}
-                            </div>
-                          )}
-                          {isAboveMa20 ? (
-                            <div style={{
-                              padding: '4px 10px', borderRadius: 4,
-                              backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 11,
-                              marginTop: 2,
-                            }}>
-                              🔔 즉시 매도 가능 — 한투앱에서 시장가 매도
-                              <br />
-                              <span style={{ fontWeight: 400, fontSize: 10 }}>
-                                (또는 장 마감 후 정식 %B 확인 후 익일 매도)
-                              </span>
-                            </div>
-                          ) : (
-                            <div style={{
-                              display: 'inline-block', padding: '4px 10px', borderRadius: 4,
-                              backgroundColor: '#e3f2fd', color: '#1565c0', fontWeight: 600, fontSize: 11,
-                              width: 'fit-content', marginTop: 2,
-                            }}>
-                              💡 장중 시세 — 매도 조건 미충족
-                            </div>
-                          )}
-                          <div style={{ fontSize: 9, color: '#999' }}>
+                          <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>
                             확인시각: {price.updatedAt}
                           </div>
                         </>
@@ -513,7 +566,7 @@ export default function BollingerPage() {
                             손절가: {fmt(holding.stopLossPrice)}원 (-5%)
                           </div>
                           <div style={{ fontSize: 10, color: '#888', marginTop: 4 }}>
-                            [📊 현재가 확인] 또는 [📉 매도 신호 확인] 버튼을 눌러주세요.
+                            [📉 보유종목 확인] 버튼을 눌러주세요.
                           </div>
                         </>
                       )}
@@ -556,10 +609,10 @@ export default function BollingerPage() {
                           backgroundColor: '#c6efce', color: '#006100', fontWeight: 700, fontSize: 11,
                           width: 'fit-content',
                         }}>
-                          ✅ 매수 조건 충족 — 익일 08:50 시장가 매수
+                          ✅ 매수 조건 충족 — 08:50 시장가 매수
                         </div>
                         <div style={{ fontSize: 9, color: '#999' }}>
-                          손절: 매수가 -5% 즉시 등록 | 익절: %B ≥ 0.5 확인 후 익일 매도
+                          손절: 매수가 -5% 즉시 등록 | 익절: %B ≥ 0.5 확인 후 08:50 매도
                         </div>
                       </div>
                     </td>
@@ -582,7 +635,7 @@ export default function BollingerPage() {
                       <div style={{ fontSize: 11, color: '#666' }}>
                         조건: %B &lt; 0.10 AND 거래량 ≥ 1.5배
                         <br />
-                        <span style={{ fontSize: 10, color: '#999' }}>내일 장 마감 후 다시 확인하세요.</span>
+                        <span style={{ fontSize: 10, color: '#999' }}>내일 08:00에 다시 확인하세요.</span>
                       </div>
                     </td>
                   </tr>
@@ -727,11 +780,11 @@ export default function BollingerPage() {
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매수 조건 (AND)</td></tr>
             <tr><td colSpan={2} style={RS.val}>%B &lt; 0.10 AND 거래량 ≥ 20일 평균의 1.5배</td></tr>
-            <tr><td colSpan={2} style={RS.val}>복수 신호 시 %B 가장 낮은 종목 1개 | 익일 08:50 시장가</td></tr>
+            <tr><td colSpan={2} style={RS.val}>복수 신호 시 %B 가장 낮은 종목 1개 | 당일 08:50 시장가</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>청산 규칙</td></tr>
             <tr><td style={RS.label}>장중 매도</td><td style={RS.val}>현재가 ≥ MA20 돌파 시 즉시 시장가 매도 (한투앱)</td></tr>
-            <tr><td style={RS.label}>익절</td><td style={RS.val}>장 마감 후 %B ≥ 0.5 확인 → 익일 08:50 시장가 매도</td></tr>
+            <tr><td style={RS.label}>익절</td><td style={RS.val}>08:00 이후 %B ≥ 0.5 확인 → 08:50 시장가 매도</td></tr>
             <tr><td style={RS.label}>손절</td><td style={RS.val}>매수가 대비 -5% (매수 당일 즉시 지정가 등록)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>서킷브레이커</td></tr>

@@ -303,8 +303,8 @@ export default function SwingPage() {
         {!loading && screenedThisWeek && (
           <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
             {thisWeekEntry?.selected_name
-              ? `✅ 이번 주 완료: ${thisWeekEntry.selected_name} — 월요일 매수`
-              : '✅ 이번 주 완료: 매수 후보 없음 — 다음 주 금요일 재스크리닝'}
+              ? `✅ 이번 주 완료: ${thisWeekEntry.selected_name} — 08:50 매수`
+              : '✅ 이번 주 완료: 매수 후보 없음 — 다음 월요일 재스크리닝'}
           </div>
         )}
 
@@ -433,7 +433,7 @@ export default function SwingPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <tbody>
             <tr><td colSpan={2} style={{ ...RS.header }}>기본 정보</td></tr>
-            <tr><td style={RS.label}>주기</td><td style={RS.val}>주 1회 (금요일 스크리닝 → 월요일 매수)</td></tr>
+            <tr><td style={RS.label}>주기</td><td style={RS.val}>주 1회 (월요일 08:00 스크리닝 → 08:50 매수)</td></tr>
             <tr><td style={RS.label}>종목풀</td><td style={RS.val}>1차 고정 10종목 + 2차 동적 10종목 (API 자동수집)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>스코어링 (100점 만점)</td></tr>

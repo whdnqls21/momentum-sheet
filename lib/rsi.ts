@@ -47,6 +47,6 @@ export type EntrySignal = 'BUY' | 'WAIT' | 'NO_DATA';
 
 export function getEntrySignal(rsi: number | null): EntrySignal {
   if (rsi === null) return 'NO_DATA';
-  if (rsi < 30) return 'BUY';
+  if (rsi < 50) return 'BUY';
   return 'WAIT';
 }
