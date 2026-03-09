@@ -352,29 +352,27 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
             </ActionCard>
           </TimeBlock>
 
-          {/* 월요일 */}
-          <TimeBlock time="월요일 08:00~08:45">
+          {/* 스윙 스크리닝 */}
+          <TimeBlock time="매일(월~금) 08:00~08:45">
             <BranchBlock
-              question="스윙 보유 종목 있음?"
-              leftLabel="보유 없음"
-              rightLabel="보유 있음 (금 15:20 매도됨)"
+              question="스윙 보유 중 or 이번 주 매수 완료?"
+              leftLabel="스크리닝 가능"
+              rightLabel="잠금"
               left={
                 <ActionCard borderColor="#E65100" bg="#FFF3E0">
                   <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong></div>
                   <div style={{ paddingLeft: 8, marginTop: 2 }}>
                     20종목 스코어링
                     <Yes>PASS + 60↑ → 08:50 매수</Yes>
-                    <No>미달 → 다음 주</No>
+                    <No>미달 → 내일 재스크리닝</No>
                   </div>
                 </ActionCard>
               }
               right={
                 <ActionCard borderColor="#E65100" bg="#FFF3E0">
-                  <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong></div>
-                  <div style={{ paddingLeft: 8, marginTop: 2 }}>
-                    20종목 스코어링
-                    <Yes>PASS + 60↑ → 08:50 매수</Yes>
-                    <No>미달 → 다음 주</No>
+                  <div style={{ fontSize: 11, color: '#888', padding: '4px 0' }}>
+                    <Neutral>보유 중 → 매도 후 가능</Neutral>
+                    <Neutral>이번 주 매수 완료 → 다음 주</Neutral>
                   </div>
                 </ActionCard>
               }

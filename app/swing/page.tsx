@@ -111,10 +111,15 @@ export default function SwingPage() {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [timeStatus, setTimeStatus] = useState(canScreenSwing());
   const [thisWeekMonday, setThisWeekMonday] = useState(() => getThisWeekMonday());
+  const [swingHolding, setSwingHolding] = useState(false);
+  const [boughtThisWeek, setBoughtThisWeek] = useState(false);
 
-  // 이번 주 스크리닝 완료 여부
+  // 이번 주 스크리닝 완료 여부 (드롭다운용)
   const screenedThisWeek = history.some(h => h.screen_date >= thisWeekMonday);
   const thisWeekEntry = history.find(h => h.screen_date >= thisWeekMonday);
+
+  // 버튼 잠금: 보유 중 OR 이번 주 매수 완료
+  const locked = swingHolding || boughtThisWeek;
 
   // 1분마다 시간 체크 + 주 변경 감지
   useEffect(() => {
@@ -124,6 +129,22 @@ export default function SwingPage() {
     };
     const interval = setInterval(check, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  // 매매일지에서 스윙 보유/매수 상태 조회
+  useEffect(() => {
+    const monday = getThisWeekMonday();
+    Promise.all([
+      fetch('/api/journal?strategy=swing&status=open', { cache: 'no-store' }).then(r => r.json()),
+      fetch('/api/journal?strategy=swing', { cache: 'no-store' }).then(r => r.json()),
+    ]).then(([openData, allData]) => {
+      // 보유 중 (sell_date IS NULL)
+      setSwingHolding(Array.isArray(openData) && openData.length > 0);
+      // 이번 주 매수 이력 (buy_date >= 이번 주 월요일)
+      if (Array.isArray(allData)) {
+        setBoughtThisWeek(allData.some((j: any) => j.buy_date >= monday));
+      }
+    }).catch(() => {});
   }, []);
 
   // DB에서 특정 날짜 결과 로드
@@ -254,9 +275,9 @@ export default function SwingPage() {
                   <button
                     className="btn-ribbon"
                     onClick={handleRun}
-                    disabled={loading || !timeStatus.allowed || screenedThisWeek}
-                    title={screenedThisWeek ? '이번 주 스크리닝 완료' : timeStatus.reason}
-                    style={loading ? { backgroundColor: '#e2efda' } : (!timeStatus.allowed || screenedThisWeek) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                    disabled={loading || !timeStatus.allowed || locked}
+                    title={swingHolding ? '보유 종목 매도 후 스크리닝 가능' : boughtThisWeek ? '이번 주 매수 완료' : timeStatus.reason}
+                    style={loading ? { backgroundColor: '#e2efda' } : (!timeStatus.allowed || locked) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
                   </button>
@@ -294,17 +315,29 @@ export default function SwingPage() {
         </table>
         </div>
 
-        {!timeStatus.allowed && !screenedThisWeek && (
+        {!timeStatus.allowed && !locked && (
           <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10 }}>
             ⚠ {timeStatus.reason}
           </div>
         )}
 
-        {!loading && screenedThisWeek && (
+        {!loading && swingHolding && (
+          <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10, fontWeight: 600 }}>
+            ⚠ 보유 종목 있음 — 매도 후 스크리닝 가능
+          </div>
+        )}
+
+        {!loading && !swingHolding && boughtThisWeek && (
+          <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
+            ✅ 이번 주 매수 완료 — 다음 주 스크리닝 가능
+          </div>
+        )}
+
+        {!loading && screenedThisWeek && !locked && (
           <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
             {thisWeekEntry?.selected_name
-              ? `✅ 이번 주 완료: ${thisWeekEntry.selected_name} — 08:50 매수`
-              : '✅ 이번 주 완료: 매수 후보 없음 — 다음 월요일 재스크리닝'}
+              ? `✅ 이번 주 스크리닝 완료: ${thisWeekEntry.selected_name} — 08:50 매수`
+              : '✅ 이번 주 스크리닝 완료: 매수 후보 없음'}
           </div>
         )}
 
@@ -433,7 +466,7 @@ export default function SwingPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <tbody>
             <tr><td colSpan={2} style={{ ...RS.header }}>기본 정보</td></tr>
-            <tr><td style={RS.label}>주기</td><td style={RS.val}>주 1회 (월요일 08:00 스크리닝 → 08:50 매수)</td></tr>
+            <tr><td style={RS.label}>주기</td><td style={RS.val}>매일(월~금) 08:00 스크리닝, 주 1회 매수 (08:50 시장가)</td></tr>
             <tr><td style={RS.label}>종목풀</td><td style={RS.val}>1차 고정 10종목 + 2차 동적 10종목 (API 자동수집)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>스코어링 (100점 만점)</td></tr>

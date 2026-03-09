@@ -24,11 +24,12 @@ export function canScreenSwing(): { allowed: boolean; reason?: string } {
   const totalMin = hour * 60 + min;
   const dayOfWeek = getKSTDayOfWeek();
 
-  // 월요일 08:00 ~ 08:45만 허용
-  if (dayOfWeek !== 1) {
-    return { allowed: false, reason: "월요일 08:00에 스크리닝 가능합니다." };
+  // 주말 제한
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    return { allowed: false, reason: "평일 08:00에 스크리닝 가능합니다." };
   }
 
+  // 평일 08:00 ~ 08:45 허용
   if (totalMin >= 480 && totalMin < 525) {
     return { allowed: true };
   }
@@ -37,7 +38,7 @@ export function canScreenSwing(): { allowed: boolean; reason?: string } {
     return { allowed: false, reason: "08:00 이후 스크리닝 가능합니다." };
   }
 
-  return { allowed: false, reason: "오늘 스크리닝 시간이 지났습니다. 다음 월요일 08:00에 가능합니다." };
+  return { allowed: false, reason: "오늘 스크리닝 시간이 지났습니다. 내일 08:00에 다시 가능합니다." };
 }
 
 export function canScreenSector(): { allowed: boolean; reason?: string } {

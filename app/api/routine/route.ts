@@ -125,8 +125,6 @@ export async function GET() {
       });
     }
 
-    const isMonday = kst.day === 1;
-
     // ── 볼린저 루틴 ──
     // 볼린저 스크리닝 (매일 08:00~)
     if (screeningStatus.bollinger.done) {
@@ -213,6 +211,15 @@ export async function GET() {
     }
 
     // ── 스윙 루틴 ──
+    // 이번 주 매수 이력 확인 (journal)
+    const { data: swingBuys } = await supabase
+      .from('journal')
+      .select('id, buy_date')
+      .eq('strategy', 'swing')
+      .gte('buy_date', kst.mondayStr)
+      .limit(1);
+    const boughtThisWeek = !!(swingBuys && swingBuys.length > 0);
+
     // 금요일 스윙 매도
     if (kst.isFriday && holdings.swing) {
       routines.push({
@@ -227,21 +234,30 @@ export async function GET() {
       });
     }
 
-    // 스윙 스크리닝 상태
-    if (screeningStatus.swing.done) {
+    // 스윙 스크리닝 상태 — 잠금: 보유 중 or 이번 주 매수 완료
+    if (holdings.swing) {
       routines.push({
-        time: '월 08:00~',
+        time: '08:00~',
         tag: 'sw',
         label: '스윙',
-        action: screeningStatus.swing.selectedName
-          ? `✅ 이번 주 완료: ${screeningStatus.swing.selectedName} — 08:50 매수`
-          : '✅ 이번 주 완료: 매수 후보 없음',
+        action: `보유 중: ${holdings.swing.ticker_name} — 매도 후 스크리닝 가능`,
         sheet: '단기스윙',
         sheetPath: '/swing',
         done: true,
         highlight: false,
       });
-    } else if (isMonday) {
+    } else if (boughtThisWeek) {
+      routines.push({
+        time: '08:00~',
+        tag: 'sw',
+        label: '스윙',
+        action: '✅ 이번 주 매수 완료 — 다음 주 스크리닝 가능',
+        sheet: '단기스윙',
+        sheetPath: '/swing',
+        done: true,
+        highlight: false,
+      });
+    } else {
       routines.push({
         time: '08:00~',
         tag: 'sw',
@@ -253,24 +269,11 @@ export async function GET() {
         highlight: false,
         warn: true,
       });
-    } else {
-      routines.push({
-        time: '월 08:00~',
-        tag: 'sw',
-        label: '스윙',
-        action: '⚠ 스윙 스크리닝 필요',
-        sheet: '단기스윙',
-        sheetPath: '/swing',
-        done: false,
-        highlight: false,
-        warn: true,
-      });
     }
 
     // 시간순 정렬
     const timeOrder: Record<string, number> = {
       '08:00~': 1,
-      '월 08:00~': 1,
       '장중': 2,
       '15:20': 3,
     };
