@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { getToken, invalidateToken, wasTokenRecentlyIssued } from '@/lib/kis-auth';
 import { acquireSlot } from '@/lib/rate-limiter';
 import { supabase } from '@/lib/supabase';
-import { KIS_BASE_URL, KIS_TR_IDS, SECTOR_ETFS } from '@/lib/constants';
+import { KIS_BASE_URL, KIS_TR_IDS, SECTOR_ETFS, TRADING_RULES } from '@/lib/constants';
 import { calculateRSI } from '@/lib/rsi';
+import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,11 +46,6 @@ async function kisGet(path: string, trId: string, params: Record<string, string>
   if (!res.ok) throw new Error(`KIS ${trId} ${res.status}`);
   if (!data || data.rt_cd !== '0') throw new Error(`KIS [${msgCd}] ${msg1}`);
   return data;
-}
-
-// ── 날짜 포맷 ──
-function formatDate(d: Date): string {
-  return d.toISOString().slice(0, 10).replace(/-/g, '');
 }
 
 interface SectorResult {
@@ -120,8 +116,8 @@ export async function GET() {
           rsi: rsi !== null ? round1(rsi) : null,
           prices: { current: currentPrice, m1Ago: m1Price, m3Ago: m3Price || null },
         });
-      } catch (err: any) {
-        console.error(`[Sector] ${etf.code} ${etf.name} 실패:`, err.message);
+      } catch (err: unknown) {
+        console.error(`[Sector] ${etf.code} ${etf.name} 실패:`, (err as Error).message);
         results.push({
           code: etf.code,
           name: etf.name,
@@ -172,8 +168,8 @@ export async function GET() {
 
     // 지정가/손절가 계산
     const topPrevClose = top ? top.price : 0;
-    const topLimitPrice = top ? Math.floor(topPrevClose * 1.01) : 0;
-    const topStopLoss = top ? Math.floor(topLimitPrice * 0.95) : 0;
+    const topLimitPrice = top ? Math.floor(topPrevClose * (1 + TRADING_RULES.sector.gapLimit)) : 0;
+    const topStopLoss = top ? Math.floor(topLimitPrice * (1 + TRADING_RULES.sector.stopLoss / 100)) : 0;
 
     return NextResponse.json({
       etfs: results,
@@ -185,9 +181,9 @@ export async function GET() {
       screenDate,
       processedAt: now.toISOString(),
     });
-  } catch (err: any) {
-    console.error('[Sector API] 에러:', err.message);
-    return NextResponse.json({ error: err.message || '섹터 스크리닝 실패' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Sector API] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message || '섹터 스크리닝 실패' }, { status: 500 });
   }
 }
 

@@ -23,9 +23,9 @@ export async function GET(request: Request) {
 
     if (error) throw new Error(error.message);
     return NextResponse.json(data || []);
-  } catch (err: any) {
-    console.error('[Journal GET] 에러:', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Journal GET] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }
 
@@ -62,8 +62,8 @@ export async function POST(request: Request) {
 
     console.log(`[Journal] 매수 기록 추가: ${ticker_name} ${buy_qty}주 @ ${buy_price}`);
     return NextResponse.json(data, { status: 201 });
-  } catch (err: any) {
-    console.error('[Journal POST] 에러:', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Journal POST] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }

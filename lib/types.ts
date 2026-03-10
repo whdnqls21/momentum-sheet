@@ -62,17 +62,6 @@ export interface SwingStock {
   error?: string;
 }
 
-// ── 섹터 ──
-export interface SectorETF {
-  code: string;
-  name: string;
-  price: number;
-  m1Return: number;
-  m3Return: number | null;
-  composite: number;
-  rank: number;
-}
-
 // ── 매매일지 ──
 export interface JournalEntry {
   id: string;
@@ -94,61 +83,3 @@ export interface JournalEntry {
   created_at: string;
 }
 
-// ── 스크리닝 이력 ──
-export interface ScreeningHistory {
-  id: string;
-  strategy: 'swing' | 'sector' | 'bollinger';
-  screen_date: string;
-  year: number;
-  week_num: number | null;
-  week_label: string | null;
-  month_num: number | null;
-  month_label: string | null;
-  result: SwingStock[] | SectorETF[];
-  selected_ticker: string | null;
-  selected_name: string | null;
-  created_at: string;
-}
-
-// ── 할일 ──
-export interface TodoItem {
-  id: string;
-  text: string;
-  icon: '□' | '⚠' | '✓';
-  color: 'default' | 'warning' | 'danger' | 'success';
-  action?: string; // 클릭 시 이동할 시트
-}
-
-// ── 성과 통계 ──
-export interface StatsResponse {
-  summary: {
-    totalTrades: number;
-    wins: number;
-    losses: number;
-    winRate: number;
-    totalPnl: number;
-    avgPnlPerTrade: number;
-    avgWinAmount: number;
-    avgLossAmount: number;
-    profitFactor: number;
-    maxWin: number;
-    maxLoss: number;
-    avgHoldingDays: number;
-  };
-  byStrategy: {
-    swing: { trades: number; winRate: number; totalPnl: number; avgPnl: number };
-    sector: { trades: number; winRate: number; totalPnl: number; avgPnl: number };
-  };
-  timeline: {
-    label: string;
-    cumulativePnl: number;
-    trades: number;
-    winRate: number;
-  }[];
-  byReason: {
-    reason: string;
-    count: number;
-    totalPnl: number;
-    avgRate: number;
-  }[];
-}

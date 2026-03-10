@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
 import StrategyRulesModal from '@/components/StrategyRulesModal';
 import { canScreenBollinger } from '@/lib/tradingHours';
+import { TRADING_RULES } from '@/lib/constants';
+import { fmt, fmtOption } from '@/lib/utils';
 import type { BBSignal } from '@/lib/bollinger';
 
 interface BBETFResult {
@@ -60,16 +62,8 @@ interface HistoryOption {
   created_at?: string;
 }
 
-const fmt = (n: number) => n.toLocaleString();
-
 function getTodayKST(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
-}
-
-const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
-function fmtOption(h: HistoryOption): string {
-  const d = new Date(h.screen_date + 'T00:00:00');
-  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}(${DAY_NAMES[d.getDay()]})`;
 }
 
 function groupByMonth(items: HistoryOption[]): { label: string; items: HistoryOption[] }[] {
@@ -222,8 +216,8 @@ export default function BollingerPage() {
         const data = await res.json();
         if (data.holding) setHolding(data.holding);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     } finally {
       setHoldingCheckLoading(false);
     }
@@ -253,8 +247,8 @@ export default function BollingerPage() {
           setSelectedDate(histData[0].screen_date);
         }
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -390,7 +384,7 @@ export default function BollingerPage() {
           const price = isPrice ? holding as HoldingPrice : null;
           const isExit = full?.exitSignal === 'EXIT';
           const isStopNear = price?.stopLossNear === true;
-          const fullStopNear = full ? full.currentPrice <= holding.buyPrice * 0.97 : false;
+          const fullStopNear = full ? full.currentPrice <= holding.buyPrice * (1 + TRADING_RULES.bollinger.slAlert / 100) : false;
           const isAboveMa20 = price?.aboveMa20 === true;
           const cardBg = isExit ? '#FFFDE7' : (fullStopNear || isStopNear) ? '#FFEBEE' : isAboveMa20 ? '#FFFDE7' : '#E3F2FD';
           const headerBg = isExit ? '#FFFDE7' : (fullStopNear || isStopNear) ? '#ffcdd2' : isAboveMa20 ? '#fff9c4' : '#bbdefb';

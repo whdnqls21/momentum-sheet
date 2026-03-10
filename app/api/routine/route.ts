@@ -292,8 +292,8 @@ export async function GET() {
       kstHour: kst.hour,
       kstMinute: kst.minute,
     });
-  } catch (err: any) {
-    console.error('[Routine API] 에러:', err.message);
-    return NextResponse.json({ error: err.message || '루틴 조회 실패' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Routine API] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message || '루틴 조회 실패' }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getToken, invalidateToken, wasTokenRecentlyIssued } from '@/lib/kis-auth';
 import { acquireSlot } from '@/lib/rate-limiter';
 import { supabase } from '@/lib/supabase';
-import { KIS_BASE_URL, KIS_TR_IDS, SWING_POOL_1, ETF_KEYWORDS } from '@/lib/constants';
+import { KIS_BASE_URL, KIS_TR_IDS, SWING_POOL_1, ETF_KEYWORDS, TRADING_RULES } from '@/lib/constants';
 import type { SwingStock, SwingScores, SwingRaw } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -366,13 +366,13 @@ export async function GET() {
         const data = await fetchStockData(stock.code, stock.name);
         prevCloseMap.set(stock.code, data.daily[0]?.close || 0);
         allStocks.push(scoreStock(data, '1차'));
-      } catch (err: any) {
-        console.error(`[Swing] ${stock.code} ${stock.name} 데이터 수집 실패:`, err.message);
+      } catch (err: unknown) {
+        console.error(`[Swing] ${stock.code} ${stock.name} 데이터 수집 실패:`, (err as Error).message);
         allStocks.push({
           code: stock.code, name: stock.name, price: 0, pool: '1차', pass: false, score: 0,
           scores: { vol: 0, high: 0, ma5: 0, align: 0, slope: 0, foreign: 0, candle: 0, gap: 0 },
           raw: { volRatio: 0, highRatio: 0, ma5Gap: 0, slope: 0, foreignDays: 0, bullDays: 0, gapRatio: 0, isAligned: false },
-          error: err.message,
+          error: (err as Error).message,
         });
       }
       processed++;
@@ -385,26 +385,26 @@ export async function GET() {
         const data = await fetchStockData(stock.code, stock.name);
         prevCloseMap.set(stock.code, data.daily[0]?.close || 0);
         allStocks.push(scoreStock(data, '2차'));
-      } catch (err: any) {
-        console.error(`[Swing] ${stock.code} ${stock.name} 데이터 수집 실패:`, err.message);
+      } catch (err: unknown) {
+        console.error(`[Swing] ${stock.code} ${stock.name} 데이터 수집 실패:`, (err as Error).message);
         allStocks.push({
           code: stock.code, name: stock.name, price: 0, pool: '2차', pass: false, score: 0,
           scores: { vol: 0, high: 0, ma5: 0, align: 0, slope: 0, foreign: 0, candle: 0, gap: 0 },
           raw: { volRatio: 0, highRatio: 0, ma5Gap: 0, slope: 0, foreignDays: 0, bullDays: 0, gapRatio: 0, isAligned: false },
-          error: err.message,
+          error: (err as Error).message,
         });
       }
       processed++;
       console.log(`[Swing] 진행: ${processed}/${totalCount}`);
     }
 
-    // 3) 순위 정렬: PASS + 60점 이상 → 1차풀 우선 → 점수순
+    // 3) 순위 정렬: PASS + 60점 이상 → 점수순 → 동점 시 1차풀 우선
     allStocks.sort((a, b) => {
       const aQualified = a.pass && a.score >= 60 ? 1 : 0;
       const bQualified = b.pass && b.score >= 60 ? 1 : 0;
       if (aQualified !== bQualified) return bQualified - aQualified;
-      if (a.pool !== b.pool) return a.pool === '1차' ? -1 : 1;
-      return b.score - a.score;
+      if (b.score !== a.score) return b.score - a.score;
+      return a.pool === '1차' ? -1 : 1;
     });
 
     // 4) 1위 종목
@@ -416,8 +416,8 @@ export async function GET() {
 
     // 지정가/손절가 계산
     const topPrevClose = top ? (prevCloseMap.get(top.code) || 0) : 0;
-    const topLimitPrice = top ? Math.floor(topPrevClose * 1.02) : 0;
-    const topStopLoss = top ? Math.floor(topLimitPrice * 0.97) : 0;
+    const topLimitPrice = top ? Math.floor(topPrevClose * (1 + TRADING_RULES.swing.gapLimit)) : 0;
+    const topStopLoss = top ? Math.floor(topLimitPrice * (1 + TRADING_RULES.swing.stopLoss / 100)) : 0;
 
     return NextResponse.json({
       stocks: allStocks,
@@ -428,8 +428,8 @@ export async function GET() {
       week: weekInfo,
       processedAt: new Date().toISOString(),
     });
-  } catch (err: any) {
-    console.error('[Swing API] 에러:', err.message);
-    return NextResponse.json({ error: err.message || '스크리닝 실패' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Swing API] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message || '스크리닝 실패' }, { status: 500 });
   }
 }

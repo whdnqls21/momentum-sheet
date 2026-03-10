@@ -127,8 +127,8 @@ export async function GET() {
       cumulative: { total: cumTotal, swing: cumSwing, sector: cumSector, bollinger: cumBollinger },
       monthly,
     });
-  } catch (err: any) {
-    console.error('[Analysis GET] 에러:', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Analysis GET] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }

@@ -6,10 +6,8 @@ import ExcelFrame from '@/components/ExcelFrame';
 import TradingFlowModal from '@/components/TradingFlowModal';
 import type { BalanceResponse, Holding, JournalEntry } from '@/lib/types';
 import { TRADING_RULES } from '@/lib/constants';
+import { fmt, fmtPct } from '@/lib/utils';
 
-// ── 유틸 ──
-const fmt = (n: number) => n.toLocaleString();
-const fmtPct = (n: number) => n.toFixed(2) + '%';
 const pnlClass = (n: number) => (n > 0 ? 'pnl-pos' : n < 0 ? 'pnl-neg' : '');
 
 // ── 루틴 타입 ──
@@ -93,8 +91,8 @@ export default function HomePage() {
 
       setError(null);
       setLastRefresh(new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }));
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     }
   }, []);
 

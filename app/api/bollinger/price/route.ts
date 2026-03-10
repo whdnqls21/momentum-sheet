@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getToken, invalidateToken, wasTokenRecentlyIssued } from '@/lib/kis-auth';
 import { acquireSlot } from '@/lib/rate-limiter';
 import { supabase } from '@/lib/supabase';
-import { KIS_BASE_URL, KIS_TR_IDS } from '@/lib/constants';
+import { KIS_BASE_URL, KIS_TR_IDS, TRADING_RULES } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +64,7 @@ export async function GET() {
     }
 
     const h = holdings[0];
-    const stopLossPrice = Math.floor(h.buy_price * 0.95);
+    const stopLossPrice = Math.floor(h.buy_price * (1 + TRADING_RULES.bollinger.stopLoss / 100));
 
     // 2. 현재가 조회 (FHKST01010100)
     console.log(`[BB Price] 현재가 조회: ${h.ticker_code} ${h.ticker_name}`);
@@ -82,7 +82,7 @@ export async function GET() {
       ? Math.round((currentPrice - h.buy_price) / h.buy_price * 10000) / 100
       : 0;
     const profitLoss = (currentPrice - h.buy_price) * h.buy_qty;
-    const stopLossNear = currentPrice > 0 && currentPrice <= h.buy_price * 0.97;
+    const stopLossNear = currentPrice > 0 && currentPrice <= h.buy_price * (1 + TRADING_RULES.bollinger.slAlert / 100);
 
     // 3. 일별시세 조회 (FHKST01010400) → MA20 계산
     let ma20: number | null = null;
@@ -110,8 +110,8 @@ export async function GET() {
         ma20 = Math.round(closes.reduce((a: number, b: number) => a + b, 0) / 20);
         aboveMa20 = currentPrice >= ma20;
       }
-    } catch (err: any) {
-      console.error(`[BB Price] MA20 계산 실패:`, err.message);
+    } catch (err: unknown) {
+      console.error(`[BB Price] MA20 계산 실패:`, (err as Error).message);
     }
 
     const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -135,8 +135,8 @@ export async function GET() {
         updatedAt,
       },
     });
-  } catch (err: any) {
-    console.error('[BB Price API] 에러:', err.message);
-    return NextResponse.json({ error: err.message || '현재가 조회 실패' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[BB Price API] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message || '현재가 조회 실패' }, { status: 500 });
   }
 }

@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { getToken, invalidateToken, wasTokenRecentlyIssued } from '@/lib/kis-auth';
 import { acquireSlot } from '@/lib/rate-limiter';
 import { supabase } from '@/lib/supabase';
-import { KIS_BASE_URL, KIS_TR_IDS } from '@/lib/constants';
+import { KIS_BASE_URL, KIS_TR_IDS, TRADING_RULES } from '@/lib/constants';
 import { calculateBollingerBand, getBBExitSignal } from '@/lib/bollinger';
+import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,10 +48,6 @@ async function kisGet(path: string, trId: string, params: Record<string, string>
   return data;
 }
 
-function formatDate(d: Date): string {
-  return d.toISOString().slice(0, 10).replace(/-/g, '');
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -79,7 +76,7 @@ export async function GET(request: Request) {
       buyPrice: h.buy_price,
       buyQty: h.buy_qty,
       buyAmount: h.buy_amount,
-      stopLossPrice: Math.floor(h.buy_price * 0.95),
+      stopLossPrice: Math.floor(h.buy_price * (1 + TRADING_RULES.bollinger.stopLoss / 100)),
     };
 
     // refresh=false → journal 정보만 반환
@@ -136,8 +133,8 @@ export async function GET(request: Request) {
         updatedAt,
       },
     });
-  } catch (err: any) {
-    console.error('[BB Exit API] 에러:', err.message);
-    return NextResponse.json({ error: err.message || '매도 신호 확인 실패' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[BB Exit API] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message || '매도 신호 확인 실패' }, { status: 500 });
   }
 }

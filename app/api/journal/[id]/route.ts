@@ -46,9 +46,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     console.log(`[Journal] 청산: ${id} → 손익 ${profit_loss} (${profit_rate}%)`);
     return NextResponse.json(data);
-  } catch (err: any) {
-    console.error('[Journal PATCH] 에러:', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Journal PATCH] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }
 
@@ -66,8 +66,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     console.log(`[Journal] 삭제: ${id}`);
     return NextResponse.json({ ok: true });
-  } catch (err: any) {
-    console.error('[Journal DELETE] 에러:', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Journal DELETE] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }

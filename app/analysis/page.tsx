@@ -3,11 +3,9 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import ExcelFrame from '@/components/ExcelFrame';
+import { fmt, fmtPct } from '@/lib/utils';
 
 const AnalysisCharts = dynamic(() => import('@/components/charts/AnalysisCharts'), { ssr: false });
-
-const fmt = (n: number) => n.toLocaleString();
-const fmtPct = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
 function pnlColor(n: number): string {
   return n > 0 ? '#006100' : n < 0 ? '#9c0006' : '#333';
 }

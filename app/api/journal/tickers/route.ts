@@ -72,8 +72,8 @@ export async function GET() {
 
     const result = Array.from(tickers.values()).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     return NextResponse.json(result);
-  } catch (err: any) {
-    console.error('[Tickers API] 에러:', err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Tickers API] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }

@@ -164,7 +164,7 @@ KODEX, TIGER, KBSTAR, SOL, ACE, HANARO, ARIRANG, KOSEF, KIWOOM, BNK, TIMEFOLIO, 
 | 8 | 이격도 적정성 | 15 | 현재가 ÷ MA20 × 100 | 100~105%→15, 105~108%→10, 97~100%→7, else→0 |
 
 **필터 (PASS/FAIL)**: 현재가>MA5 AND 20일선기울기>0 AND 거래량비율≥0.8
-**매수 조건**: PASS + 60점↑ + 1위 (동점 시 1차 풀 우선)
+**매수 조건**: PASS + 60점↑ + 1위 (점수 우선, 동점 시 1차 풀 우선)
 **매매규칙**: 200만원 지정가 매수 (전일 종가 +2%), 익절 +7%, 손절 -3% (지정가 기준), 금요일 미청산 시 종가 매도
 - **스크리닝 시간 제한**: 평일(월~금) 08:00~08:45, 주 1회 매수 잠금 (매매일지 기준), 보유 중 잠금
 
@@ -300,9 +300,10 @@ momentum-sheet/
 │   └── TradingFlowModal.tsx     # 운영 플로우 모달 (홈 페이지)
 ├── lib/
 │   ├── types.ts                  # 공유 타입
-│   ├── constants.ts              # 종목풀, 매매규칙, TR_ID
+│   ├── constants.ts              # 종목풀, 매매규칙(TRADING_RULES), TR_ID
+│   ├── utils.ts                  # 공통 유틸 (fmt, fmtPct, fmtOption, formatDate)
 │   ├── kis-auth.ts               # 토큰 관리 (Supabase DB 기반, 캐시 없음)
-│   ├── kis-api.ts                # API 클라이언트
+│   ├── kis-api.ts                # API 클라이언트 (kisGet만 사용)
 │   ├── rate-limiter.ts           # 초당 20회 제한
 │   ├── rsi.ts                    # RSI(3) 계산 + 진입 신호 판단
 │   ├── bollinger.ts              # 볼린저밴드 %B 계산 + 신호 판단
@@ -336,6 +337,7 @@ momentum-sheet/
 | 15 | 운영 플로우 모달 | ✅ 완료 |
 | 16 | 지정가/손절가 표시 | ✅ 완료 |
 | 17 | 진입 카드 통일 + 상태 메시지 통일 | ✅ 완료 |
+| 18 | 코드 정리 (상수 통합, 중복 제거, 버그 수정, 타입 정리) | ✅ 완료 |
 
 ---
 

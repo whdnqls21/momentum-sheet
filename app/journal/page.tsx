@@ -4,9 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import ExcelFrame from '@/components/ExcelFrame';
 import type { JournalEntry } from '@/lib/types';
-
-const fmt = (n: number) => n.toLocaleString();
-const fmtPct = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+import { fmt, fmtPct } from '@/lib/utils';
 
 // ── 셀 스타일 ──
 const S = {
@@ -49,8 +47,8 @@ export default function JournalPage() {
       const data = await res.json();
       if (Array.isArray(data)) setEntries(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     }
   }, [strategyFilter, statusFilter]);
 
@@ -393,8 +391,8 @@ function BuyModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => vo
         throw new Error(body.error || `HTTP ${res.status}`);
       }
       onSaved();
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr((e as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -537,8 +535,8 @@ function SellModal({ entry, onClose, onSaved }: { entry: JournalEntry; onClose: 
         throw new Error(body.error || `HTTP ${res.status}`);
       }
       onSaved();
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr((e as Error).message);
     } finally {
       setSubmitting(false);
     }

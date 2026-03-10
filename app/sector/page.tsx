@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
 import StrategyRulesModal from '@/components/StrategyRulesModal';
 import { canScreenSector, canRefreshRSI } from '@/lib/tradingHours';
+import { TRADING_RULES } from '@/lib/constants';
+import { fmt, fmtPct, fmtOption } from '@/lib/utils';
 import type { EntrySignal } from '@/lib/rsi';
 
 interface SectorETFResult {
@@ -48,9 +50,6 @@ interface LockedTarget {
   stopLoss?: number;
 }
 
-const fmt = (n: number) => n.toLocaleString();
-const fmtPct = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
-
 function getEntrySignalLocal(rsi: number | null): EntrySignal {
   if (rsi === null) return 'NO_DATA';
   if (rsi < 50) return 'BUY';
@@ -61,12 +60,6 @@ function getCurrentKST(): { year: number; month: number } {
   const kst = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
   const [y, m] = kst.split('-');
   return { year: parseInt(y), month: parseInt(m) };
-}
-
-const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
-function fmtOption(h: HistoryOption): string {
-  const d = new Date(h.screen_date + 'T00:00:00');
-  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}(${DAY_NAMES[d.getDay()]})`;
 }
 
 function groupByMonth(items: HistoryOption[]): { label: string; items: HistoryOption[] }[] {
@@ -158,8 +151,8 @@ export default function SectorPage() {
       if (topEtf && data.selected_ticker) {
         const monthStr = `${data.year}-${String(data.month_num).padStart(2, '0')}`;
         const pc = topEtf.price || 0;
-        const lp = Math.floor(pc * 1.01);
-        const sl = Math.floor(lp * 0.95);
+        const lp = Math.floor(pc * (1 + TRADING_RULES.sector.gapLimit));
+        const sl = Math.floor(lp * (1 + TRADING_RULES.sector.stopLoss / 100));
         setLockedTarget({
           name: data.selected_name || topEtf.name,
           code: data.selected_ticker,
@@ -247,8 +240,8 @@ export default function SectorPage() {
           setSelectedDate(histData[0].screen_date);
         }
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -270,8 +263,8 @@ export default function SectorPage() {
         signal: data.signal,
         updatedAt: data.updatedAt,
       } : null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     } finally {
       setRsiLoading(false);
     }

@@ -6,8 +6,7 @@ import {
   PieChart, Pie, Cell,
   BarChart, Bar, ReferenceLine,
 } from 'recharts';
-
-const fmt = (n: number) => n.toLocaleString();
+import { fmt } from '@/lib/utils';
 
 const TABS = [
   { id: 'cumulative', label: '누적손익' },

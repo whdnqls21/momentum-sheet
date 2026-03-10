@@ -70,10 +70,10 @@ export async function GET() {
     };
 
     return NextResponse.json(response);
-  } catch (err: any) {
-    console.error('[API /balance] 에러:', err.message);
+  } catch (err: unknown) {
+    console.error('[API /balance] 에러:', (err as Error).message);
     return NextResponse.json(
-      { error: err.message || '잔고 조회 실패' },
+      { error: (err as Error).message || '잔고 조회 실패' },
       { status: 500 }
     );
   }

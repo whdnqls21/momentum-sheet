@@ -6,9 +6,8 @@ interface KisResponse {
   rt_cd: string;   // '0' = 성공
   msg_cd: string;
   msg1: string;
-  output1?: any;
-  output2?: any;
-  output?: any;
+  // KIS API 응답 형태가 TR_ID마다 다름 (object | array)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -76,32 +75,4 @@ export async function kisGet(
   throw lastError || new Error(`KIS API 호출 실패: ${trId}`);
 }
 
-export async function kisPost(
-  path: string,
-  trId: string,
-  body: Record<string, any>
-): Promise<KisResponse> {
-  await acquireSlot();
 
-  const url = `${KIS_BASE_URL}${path}`;
-  const headers = await buildHeaders(trId);
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`KIS API POST ${res.status}: ${res.statusText}`);
-  }
-
-  const data: KisResponse = await res.json();
-
-  if (data.rt_cd !== '0') {
-    throw new Error(`KIS API 에러: [${data.msg_cd}] ${data.msg1}`);
-  }
-
-  return data;
-}

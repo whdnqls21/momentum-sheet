@@ -47,6 +47,7 @@ export const TRADING_RULES = {
     buyAmount: 2_000_000,
     takeProfit: 7,    // +7%
     stopLoss: -3,     // -3%
+    gapLimit: 0.02,   // 지정가: 전일종가 +2%
     tpAlert: 6,       // 임박: +6%
     slAlert: -2,      // 임박: -2%
     clearDay: 'friday' as const,
@@ -55,6 +56,7 @@ export const TRADING_RULES = {
     buyAmount: 2_000_000,
     takeProfit: 7,    // +7%
     stopLoss: -5,     // -5%
+    gapLimit: 0.01,   // 지정가: 전일종가 +1%
     tpAlert: 6,       // 임박: +6%
     slAlert: -4,      // 임박: -4%
     clearDay: 'monthEnd' as const,
@@ -63,6 +65,7 @@ export const TRADING_RULES = {
     buyAmount: 1_500_000,
     takeProfit: 50,   // %B >= 0.5 (별도 로직)
     stopLoss: -5,     // -5%
+    gapLimit: 0.01,   // 지정가: 전일종가 +1%
     tpAlert: 45,      // 임박 없음 (placeholder)
     slAlert: -3,      // 임박: -3%
     clearDay: 'none' as const,

@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { getToken, invalidateToken, wasTokenRecentlyIssued } from '@/lib/kis-auth';
 import { acquireSlot } from '@/lib/rate-limiter';
 import { supabase } from '@/lib/supabase';
-import { KIS_BASE_URL, KIS_TR_IDS, BB_ETFS } from '@/lib/constants';
-import { calculateBollingerBand, calculateVolumeRatio, getBBEntrySignal } from '@/lib/bollinger';
-import type { BBSignal } from '@/lib/bollinger';
+import { KIS_BASE_URL, KIS_TR_IDS, BB_ETFS, TRADING_RULES } from '@/lib/constants';
+import { calculateBollingerBand, calculateVolumeRatio, getBBEntrySignal, type BBSignal } from '@/lib/bollinger';
+import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,11 +46,6 @@ async function kisGet(path: string, trId: string, params: Record<string, string>
   if (!res.ok) throw new Error(`KIS ${trId} ${res.status}`);
   if (!data || data.rt_cd !== '0') throw new Error(`KIS [${msgCd}] ${msg1}`);
   return data;
-}
-
-// ── 날짜 포맷 ──
-function formatDate(d: Date): string {
-  return d.toISOString().slice(0, 10).replace(/-/g, '');
 }
 
 interface BBResult {
@@ -111,8 +106,8 @@ export async function GET() {
           signal,
           bb: bb ? { upper: bb.upper, middle: bb.middle, lower: bb.lower } : null,
         });
-      } catch (err: any) {
-        console.error(`[Bollinger] ${etf.code} ${etf.name} 실패:`, err.message);
+      } catch (err: unknown) {
+        console.error(`[Bollinger] ${etf.code} ${etf.name} 실패:`, (err as Error).message);
         results.push({
           code: etf.code,
           name: etf.name,
@@ -159,8 +154,8 @@ export async function GET() {
 
     // 지정가/손절가 계산
     const bcPrevClose = buyCandidate ? buyCandidate.price : 0;
-    const bcLimitPrice = buyCandidate ? Math.floor(bcPrevClose * 1.01) : 0;
-    const bcStopLoss = buyCandidate ? Math.floor(bcLimitPrice * 0.95) : 0;
+    const bcLimitPrice = buyCandidate ? Math.floor(bcPrevClose * (1 + TRADING_RULES.bollinger.gapLimit)) : 0;
+    const bcStopLoss = buyCandidate ? Math.floor(bcLimitPrice * (1 + TRADING_RULES.bollinger.stopLoss / 100)) : 0;
 
     return NextResponse.json({
       etfs: results,
@@ -174,8 +169,8 @@ export async function GET() {
       screenDate,
       processedAt: now.toISOString(),
     });
-  } catch (err: any) {
-    console.error('[Bollinger API] 에러:', err.message);
-    return NextResponse.json({ error: err.message || '볼린저 스크리닝 실패' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[Bollinger API] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message || '볼린저 스크리닝 실패' }, { status: 500 });
   }
 }

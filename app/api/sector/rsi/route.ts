@@ -4,6 +4,7 @@ import { acquireSlot } from '@/lib/rate-limiter';
 import { supabase } from '@/lib/supabase';
 import { KIS_BASE_URL, KIS_TR_IDS } from '@/lib/constants';
 import { calculateRSI, getEntrySignal } from '@/lib/rsi';
+import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,10 +43,6 @@ async function kisGet(path: string, trId: string, params: Record<string, string>
   if (!res.ok) throw new Error(`KIS ${trId} ${res.status}`);
   if (!data || data.rt_cd !== '0') throw new Error(`KIS [${msgCd}] ${msg1}`);
   return data;
-}
-
-function formatDate(d: Date): string {
-  return d.toISOString().slice(0, 10).replace(/-/g, '');
 }
 
 export async function GET(request: Request) {
@@ -117,8 +114,8 @@ export async function GET(request: Request) {
       signal,
       updatedAt: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }),
     });
-  } catch (err: any) {
-    console.error('[RSI Refresh] 에러:', err.message);
-    return NextResponse.json({ error: err.message || 'RSI 새로고침 실패' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[RSI Refresh] 에러:', (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message || 'RSI 새로고침 실패' }, { status: 500 });
   }
 }

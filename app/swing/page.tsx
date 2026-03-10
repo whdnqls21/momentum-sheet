@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
 import StrategyRulesModal from '@/components/StrategyRulesModal';
 import { canScreenSwing } from '@/lib/tradingHours';
+import { fmt, fmtOption } from '@/lib/utils';
 import type { SwingStock, SwingScores } from '@/lib/types';
 
 interface HistoryOption {
@@ -22,8 +23,6 @@ interface SwingResult {
   processedAt?: string;
 }
 
-const fmt = (n: number) => n.toLocaleString();
-
 function getThisWeekMonday(): string {
   const now = new Date(Date.now() + 9 * 60 * 60 * 1000); // KST
   const dayOfWeek = now.getUTCDay(); // 0=일, 5=금
@@ -31,12 +30,6 @@ function getThisWeekMonday(): string {
   const monday = new Date(now);
   monday.setUTCDate(monday.getUTCDate() + diff);
   return monday.toISOString().slice(0, 10); // YYYY-MM-DD
-}
-
-const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
-function fmtOption(h: HistoryOption): string {
-  const d = new Date(h.screen_date + 'T00:00:00');
-  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}(${DAY_NAMES[d.getDay()]})`;
 }
 
 function weekLabel(screenDate: string): string {
@@ -224,8 +217,8 @@ export default function SwingPage() {
           setSelectedDate(histData[0].screen_date);
         }
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -236,7 +229,8 @@ export default function SwingPage() {
     const aQ = a.pass && a.score >= 60 ? 1 : 0;
     const bQ = b.pass && b.score >= 60 ? 1 : 0;
     if (aQ !== bQ) return bQ - aQ;
-    return b.score - a.score;
+    if (b.score !== a.score) return b.score - a.score;
+    return a.pool === '1차' ? -1 : 1;
   });
   const passCount = stocks.filter((s) => s.pass && s.score >= 60).length;
 
