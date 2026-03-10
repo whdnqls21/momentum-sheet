@@ -18,7 +18,7 @@ interface BBETFResult {
 
 interface BBScreenResult {
   etfs: BBETFResult[];
-  buyCandidate: { code: string; name: string; percentB: number | null; volumeRatio: number | null } | null;
+  buyCandidate: { code: string; name: string; percentB: number | null; volumeRatio: number | null; prevClose?: number; limitPrice?: number; stopLoss?: number } | null;
   screenDate?: string;
   processedAt?: string;
 }
@@ -272,7 +272,7 @@ export default function BollingerPage() {
   const screenTitle = screenedToday
     ? '오늘 스크리닝 완료'
     : holding
-      ? '보유 종목 있음'
+      ? '보유 종목 매도 후 스크리닝 가능'
       : timeStatus.reason;
 
   return (
@@ -360,13 +360,13 @@ export default function BollingerPage() {
         {!loading && screenedToday && (
           <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
             {todayEntry?.selected_name
-              ? `✅ 오늘 완료 — BUY: ${todayEntry.selected_name}`
-              : '✅ 오늘 완료 — 매수 신호 없음'}
+              ? `✅ 오늘 스크리닝 완료 — 매수: ${todayEntry.selected_name}`
+              : '✅ 오늘 스크리닝 완료 — 매수 대상 없음'}
           </div>
         )}
         {!loading && !screenedToday && !!holding && (
-          <div style={{ padding: '4px 12px', color: '#bf8f00', fontSize: 10, fontWeight: 600 }}>
-            보유 종목 있음 — 매도 후 스크리닝 가능
+          <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10, fontWeight: 600 }}>
+            ⚠ 보유 종목 있음 — 매도 후 스크리닝 가능
           </div>
         )}
 
@@ -587,8 +587,8 @@ export default function BollingerPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
                   <tr>
-                    <td style={{ ...S.section, backgroundColor: '#ffc7ce', color: '#9c0006' }} colSpan={2}>
-                      🔔 매수 신호 감지!
+                    <td style={{ ...S.section, backgroundColor: '#FFFDE7', color: '#bf8f00' }} colSpan={2}>
+                      📌 오늘 매수 대상
                     </td>
                   </tr>
                   <tr>
@@ -609,10 +609,21 @@ export default function BollingerPage() {
                           backgroundColor: '#c6efce', color: '#006100', fontWeight: 700, fontSize: 11,
                           width: 'fit-content',
                         }}>
-                          ✅ 매수 조건 충족 — 08:50 시장가 매수
+                          ✅ 매수 조건 충족 — 08:50 지정가 매수
                         </div>
+                        {result.buyCandidate.prevClose ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+                            <div style={{ fontSize: 11, color: '#333' }}>전일 종가: {fmt(result.buyCandidate.prevClose)}원</div>
+                            <div style={{ fontSize: 11, color: '#1565C0', fontWeight: 700 }}>지정가: {fmt(result.buyCandidate.limitPrice!)}원 (종가 +1%)</div>
+                            <div style={{ fontSize: 11, color: '#C62828', fontWeight: 700 }}>손절가: {fmt(result.buyCandidate.stopLoss!)}원 (지정가 -5%)</div>
+                            <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
+                              → 08:50에 지정가 {fmt(result.buyCandidate.limitPrice!)}원으로 주문
+                              <br />→ 시초가 {fmt(result.buyCandidate.limitPrice!)}원 초과 시 미체결 (패스)
+                            </div>
+                          </div>
+                        ) : null}
                         <div style={{ fontSize: 9, color: '#999' }}>
-                          손절: 매수가 -5% 즉시 등록 | 익절: %B ≥ 0.5 확인 후 08:50 매도
+                          익절: %B ≥ 0.5 확인 후 08:50 매도
                         </div>
                       </div>
                     </td>
@@ -626,7 +637,7 @@ export default function BollingerPage() {
                 <tbody>
                   <tr>
                     <td style={{ ...S.section, backgroundColor: '#f5f5f5', color: '#888' }} colSpan={2}>
-                      📊 매수 신호 없음
+                      📊 매수 대상 없음
                     </td>
                   </tr>
                   <tr>
@@ -780,7 +791,8 @@ export default function BollingerPage() {
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매수 조건 (AND)</td></tr>
             <tr><td colSpan={2} style={RS.val}>%B &lt; 0.10 AND 거래량 ≥ 20일 평균의 1.5배</td></tr>
-            <tr><td colSpan={2} style={RS.val}>복수 신호 시 %B 가장 낮은 종목 1개 | 당일 08:50 시장가</td></tr>
+            <tr><td colSpan={2} style={RS.val}>복수 신호 시 %B 가장 낮은 종목 1개</td></tr>
+            <tr><td style={RS.label}>매수 방법</td><td style={RS.val}>지정가 (전일 종가 +1%)<br /><span style={{ color: '#888', fontSize: 10 }}>시초가가 지정가 초과 시 미체결 → 패스</span></td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>청산 규칙</td></tr>
             <tr><td style={RS.label}>장중 매도</td><td style={RS.val}>현재가 ≥ MA20 돌파 시 즉시 시장가 매도 (한투앱)</td></tr>

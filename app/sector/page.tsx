@@ -20,7 +20,7 @@ interface SectorETFResult {
 
 interface SectorResult {
   etfs: SectorETFResult[];
-  selected: { code: string; name: string; composite: number } | null;
+  selected: { code: string; name: string; composite: number; prevClose?: number; limitPrice?: number; stopLoss?: number } | null;
   month: { year: number; month: number; label: string };
   screenDate?: string;
   processedAt?: string;
@@ -43,6 +43,9 @@ interface LockedTarget {
   signal: EntrySignal;
   month: string;
   updatedAt?: string;
+  prevClose?: number;
+  limitPrice?: number;
+  stopLoss?: number;
 }
 
 const fmt = (n: number) => n.toLocaleString();
@@ -154,12 +157,16 @@ export default function SectorPage() {
       // 이력 로드 시 1위 ETF를 lockedTarget으로 설정
       if (topEtf && data.selected_ticker) {
         const monthStr = `${data.year}-${String(data.month_num).padStart(2, '0')}`;
+        const pc = topEtf.price || 0;
+        const lp = Math.floor(pc * 1.01);
+        const sl = Math.floor(lp * 0.95);
         setLockedTarget({
           name: data.selected_name || topEtf.name,
           code: data.selected_ticker,
           rsi: topEtf.rsi ?? null,
           signal: getEntrySignalLocal(topEtf.rsi ?? null),
           month: monthStr,
+          prevClose: pc, limitPrice: lp, stopLoss: sl,
         });
       }
     } catch {
@@ -227,6 +234,7 @@ export default function SectorPage() {
           signal: getEntrySignalLocal(topEtf.rsi ?? null),
           month: monthStr,
           updatedAt: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+          prevClose: data.selected.prevClose, limitPrice: data.selected.limitPrice, stopLoss: data.selected.stopLoss,
         });
       }
 
@@ -308,7 +316,7 @@ export default function SectorPage() {
                     className="btn-ribbon"
                     onClick={handleRun}
                     disabled={loading || !sectorTimeStatus.allowed || hasTarget}
-                    title={hasTarget ? '이번 달 타겟 확정됨' : sectorTimeStatus.reason}
+                    title={hasTarget && sectorHolding ? '보유 종목 매도 후 스크리닝 가능' : hasTarget ? '이번 달 스크리닝 완료' : sectorTimeStatus.reason}
                     style={loading ? { backgroundColor: '#e2efda' } : (!sectorTimeStatus.allowed || hasTarget) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 섹터 스크리닝'}
@@ -317,7 +325,7 @@ export default function SectorPage() {
                     className="btn-ribbon"
                     onClick={handleRsiRefresh}
                     disabled={rsiLoading || !hasTarget || sectorHolding || loading || !rsiTimeStatus.allowed}
-                    title={!hasTarget ? '스크리닝 먼저 실행' : sectorHolding ? '이미 진입 완료' : rsiTimeStatus.reason}
+                    title={!hasTarget ? '스크리닝 먼저 실행' : sectorHolding ? '보유 종목 매도 후 스크리닝 가능' : rsiTimeStatus.reason}
                     style={{
                       ...(rsiLoading ? { backgroundColor: '#e2efda' } : {}),
                       ...(!hasTarget || sectorHolding || !rsiTimeStatus.allowed ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
@@ -372,13 +380,13 @@ export default function SectorPage() {
           </div>
         )}
         {!loading && hasTarget && sectorHolding && (
-          <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
-            ✅ 이미 진입 완료
+          <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10, fontWeight: 600 }}>
+            ⚠ 보유 종목 있음 — 매도 후 스크리닝 가능
           </div>
         )}
         {!loading && hasTarget && !sectorHolding && targetThisMonth?.selected_name && (
           <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
-            ✅ {currentKST.month}월 진입 대상: {targetThisMonth.selected_name} — RSI 대기 중
+            ✅ {currentKST.month}월 스크리닝 완료 — 매수: {targetThisMonth.selected_name} (RSI 대기 중)
           </div>
         )}
 
@@ -425,13 +433,22 @@ export default function SectorPage() {
                           )}
                         </div>
                         {lockedTarget.signal === 'BUY' && (
-                          <div style={{
-                            display: 'inline-block', padding: '4px 10px', borderRadius: 4,
-                            backgroundColor: '#c6efce', color: '#006100', fontWeight: 700, fontSize: 11,
-                            width: 'fit-content',
-                          }}>
-                            ✅ 진입 가능 — 08:50 매수
-                          </div>
+                          <>
+                            <div style={{
+                              display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                              backgroundColor: '#c6efce', color: '#006100', fontWeight: 700, fontSize: 11,
+                              width: 'fit-content',
+                            }}>
+                              ✅ 진입 가능 — 08:50 지정가 매수
+                            </div>
+                            {lockedTarget.prevClose ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4 }}>
+                                <div style={{ fontSize: 11, color: '#333' }}>전일 종가: {fmt(lockedTarget.prevClose)}원</div>
+                                <div style={{ fontSize: 11, color: '#1565C0', fontWeight: 700 }}>지정가: {fmt(lockedTarget.limitPrice!)}원 (종가 +1%)</div>
+                                <div style={{ fontSize: 11, color: '#C62828', fontWeight: 700 }}>손절가: {fmt(lockedTarget.stopLoss!)}원 (지정가 -5%)</div>
+                              </div>
+                            ) : null}
+                          </>
                         )}
                         {lockedTarget.signal === 'WAIT' && (
                           <div style={{
@@ -572,6 +589,7 @@ export default function SectorPage() {
             <tr><td style={RS.label}>월말까지 미달</td><td style={RS.val}>해당 월 패스 (현금 유지)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매매 규칙</td></tr>
+            <tr><td style={RS.label}>매수 방법</td><td style={RS.val}>지정가 (전일 종가 +1%)<br /><span style={{ color: '#888', fontSize: 10 }}>시초가가 지정가 초과 시 미체결 → 패스</span></td></tr>
             <tr><td style={RS.label}>매수금액</td><td style={RS.val}>200만원</td></tr>
             <tr><td style={RS.label}>익절</td><td style={RS.val}>+7%</td></tr>
             <tr><td style={RS.label}>손절</td><td style={RS.val}>매수가 대비 -5% (매수 당일 즉시 지정가 등록)</td></tr>

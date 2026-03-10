@@ -16,7 +16,7 @@ interface HistoryOption {
 
 interface SwingResult {
   stocks: SwingStock[];
-  selected: { code: string; name: string; score: number } | null;
+  selected: { code: string; name: string; score: number; prevClose?: number; limitPrice?: number; stopLoss?: number } | null;
   week: { year: number; week: number; label: string };
   screenDate?: string;
   processedAt?: string;
@@ -276,7 +276,7 @@ export default function SwingPage() {
                     className="btn-ribbon"
                     onClick={handleRun}
                     disabled={loading || !timeStatus.allowed || locked}
-                    title={swingHolding ? '보유 종목 매도 후 스크리닝 가능' : boughtThisWeek ? '이번 주 매수 완료' : timeStatus.reason}
+                    title={swingHolding ? '보유 종목 매도 후 스크리닝 가능' : boughtThisWeek ? '이번 주 스크리닝 완료' : timeStatus.reason}
                     style={loading ? { backgroundColor: '#e2efda' } : (!timeStatus.allowed || locked) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
@@ -336,8 +336,8 @@ export default function SwingPage() {
         {!loading && screenedThisWeek && !locked && (
           <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
             {thisWeekEntry?.selected_name
-              ? `✅ 이번 주 스크리닝 완료: ${thisWeekEntry.selected_name} — 08:50 매수`
-              : '✅ 이번 주 스크리닝 완료: 매수 후보 없음'}
+              ? `✅ 이번 주 스크리닝 완료 — 매수: ${thisWeekEntry.selected_name}`
+              : '✅ 이번 주 스크리닝 완료 — 매수 대상 없음'}
           </div>
         )}
 
@@ -362,7 +362,41 @@ export default function SwingPage() {
                 <tbody>
                   <tr>
                     <td style={{ ...S.section, backgroundColor: '#FFFDE7', color: '#bf8f00' }} colSpan={2}>
-                      이번 주 매수 종목: {result.selected.name} ({result.selected.code}) — {result.selected.score}점
+                      📌 이번 주 매수 대상
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={S.rowNum} />
+                    <td style={{ ...S.tdL, padding: '10px 12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ fontWeight: 700, fontSize: 12 }}>
+                          {result.selected.name} ({result.selected.code})
+                        </div>
+                        <div style={{ fontSize: 11, color: '#555' }}>
+                          스코어: {result.selected.score}점
+                        </div>
+                        <div style={{
+                          display: 'inline-block', padding: '4px 10px', borderRadius: 4,
+                          backgroundColor: '#c6efce', color: '#006100', fontWeight: 700, fontSize: 11,
+                          width: 'fit-content',
+                        }}>
+                          ✅ 매수 조건 충족 — 08:50 지정가 매수
+                        </div>
+                        {result.selected.prevClose ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+                            <div style={{ fontSize: 11, color: '#333' }}>전일 종가: {fmt(result.selected.prevClose)}원</div>
+                            <div style={{ fontSize: 11, color: '#1565C0', fontWeight: 700 }}>지정가: {fmt(result.selected.limitPrice!)}원 (종가 +2%)</div>
+                            <div style={{ fontSize: 11, color: '#C62828', fontWeight: 700 }}>손절가: {fmt(result.selected.stopLoss!)}원 (지정가 -3%)</div>
+                            <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
+                              → 08:50에 지정가 {fmt(result.selected.limitPrice!)}원으로 주문
+                              <br />→ 시초가 {fmt(result.selected.limitPrice!)}원 초과 시 미체결 (패스)
+                            </div>
+                          </div>
+                        ) : null}
+                        <div style={{ fontSize: 9, color: '#999' }}>
+                          기준: PASS + 60점 이상 1위 종목
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -374,8 +408,18 @@ export default function SwingPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
                   <tr>
-                    <td style={{ ...S.section, backgroundColor: '#ffc7ce', color: '#9c0006' }} colSpan={2}>
-                      매수 후보 없음 (PASS + 60점 이상 종목 없음)
+                    <td style={{ ...S.section, backgroundColor: '#f5f5f5', color: '#888' }} colSpan={2}>
+                      📊 매수 대상 없음
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={S.rowNum} />
+                    <td style={{ ...S.tdL, padding: '8px 12px' }}>
+                      <div style={{ fontSize: 11, color: '#666' }}>
+                        조건: PASS + 60점 이상 종목 없음
+                        <br />
+                        <span style={{ fontSize: 10, color: '#999' }}>내일 08:00에 다시 확인하세요.</span>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -486,6 +530,7 @@ export default function SwingPage() {
             <tr><td colSpan={2} style={RS.val}>PASS + 60점 이상 + 전체 1위 (동점 시 1차 풀 우선)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매매 규칙</td></tr>
+            <tr><td style={RS.label}>매수 방법</td><td style={RS.val}>지정가 (전일 종가 +2%)<br /><span style={{ color: '#888', fontSize: 10 }}>시초가가 지정가 초과 시 미체결 → 패스</span></td></tr>
             <tr><td style={RS.label}>매수금액</td><td style={RS.val}>200만원</td></tr>
             <tr><td style={RS.label}>익절</td><td style={RS.val}>+7%</td></tr>
             <tr><td style={RS.label}>손절</td><td style={RS.val}>매수가 대비 -3% (매수 당일 즉시 지정가 등록)</td></tr>

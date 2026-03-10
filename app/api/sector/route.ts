@@ -170,9 +170,17 @@ export async function GET() {
       console.log(`[Sector] Supabase 저장 성공: ${screenDate} (타겟: ${targetYear}년 ${targetMonth}월), 선택: ${top?.name || '없음'}`);
     }
 
+    // 지정가/손절가 계산
+    const topPrevClose = top ? top.price : 0;
+    const topLimitPrice = top ? Math.floor(topPrevClose * 1.01) : 0;
+    const topStopLoss = top ? Math.floor(topLimitPrice * 0.95) : 0;
+
     return NextResponse.json({
       etfs: results,
-      selected: top ? { code: top.code, name: top.name, composite: top.composite } : null,
+      selected: top ? {
+        code: top.code, name: top.name, composite: top.composite,
+        prevClose: topPrevClose, limitPrice: topLimitPrice, stopLoss: topStopLoss,
+      } : null,
       month: { year: targetYear, month: targetMonth, label: `${targetYear}년 ${targetMonth}월` },
       screenDate,
       processedAt: now.toISOString(),

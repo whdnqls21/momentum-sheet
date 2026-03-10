@@ -330,8 +330,10 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
                     </div>
                   </div>
                   <div style={{ marginTop: 6, fontSize: 10, color: '#555', borderTop: '1px solid #e0e0e0', paddingTop: 4 }}>
-                    한투앱 시장가 매수 (08:50 접수)<br />
-                    즉시 손절 지정가 등록<br />
+                    한투앱 지정가 매수 (스크리닝 결과의 지정가)<br />
+                    <span style={{ color: '#888' }}>→ 시초가가 지정가 초과 시 미체결 (패스)</span><br />
+                    <span style={{ color: '#888' }}>스윙: 종가+2% | 섹터: +1% | 볼린저: +1%</span><br />
+                    즉시 손절 지정가 등록 (스크리닝 결과의 손절가)<br />
                     매매일지 매수 기록
                   </div>
                 </div>

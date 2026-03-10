@@ -157,6 +157,11 @@ export async function GET() {
       console.log(`[Bollinger] Supabase 저장 성공: ${screenDate}, 매수후보: ${buyCandidate?.name || '없음'}`);
     }
 
+    // 지정가/손절가 계산
+    const bcPrevClose = buyCandidate ? buyCandidate.price : 0;
+    const bcLimitPrice = buyCandidate ? Math.floor(bcPrevClose * 1.01) : 0;
+    const bcStopLoss = buyCandidate ? Math.floor(bcLimitPrice * 0.95) : 0;
+
     return NextResponse.json({
       etfs: results,
       buyCandidate: buyCandidate ? {
@@ -164,6 +169,7 @@ export async function GET() {
         name: buyCandidate.name,
         percentB: buyCandidate.percentB,
         volumeRatio: buyCandidate.volumeRatio,
+        prevClose: bcPrevClose, limitPrice: bcLimitPrice, stopLoss: bcStopLoss,
       } : null,
       screenDate,
       processedAt: now.toISOString(),

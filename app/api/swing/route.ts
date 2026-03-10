@@ -356,6 +356,7 @@ export async function GET() {
 
     // 2) 20종목 데이터 수집 + 스코어링
     const allStocks: SwingStock[] = [];
+    const prevCloseMap = new Map<string, number>();
     const totalCount = SWING_POOL_1.length + secondaryPool.length;
     let processed = 0;
 
@@ -363,6 +364,7 @@ export async function GET() {
     for (const stock of SWING_POOL_1) {
       try {
         const data = await fetchStockData(stock.code, stock.name);
+        prevCloseMap.set(stock.code, data.daily[0]?.close || 0);
         allStocks.push(scoreStock(data, '1차'));
       } catch (err: any) {
         console.error(`[Swing] ${stock.code} ${stock.name} 데이터 수집 실패:`, err.message);
@@ -381,6 +383,7 @@ export async function GET() {
     for (const stock of secondaryPool) {
       try {
         const data = await fetchStockData(stock.code, stock.name);
+        prevCloseMap.set(stock.code, data.daily[0]?.close || 0);
         allStocks.push(scoreStock(data, '2차'));
       } catch (err: any) {
         console.error(`[Swing] ${stock.code} ${stock.name} 데이터 수집 실패:`, err.message);
@@ -411,9 +414,17 @@ export async function GET() {
     const weekInfo = getISOWeek(new Date());
     await saveHistory(allStocks, weekInfo, top?.code || null, top?.name || null);
 
+    // 지정가/손절가 계산
+    const topPrevClose = top ? (prevCloseMap.get(top.code) || 0) : 0;
+    const topLimitPrice = top ? Math.floor(topPrevClose * 1.02) : 0;
+    const topStopLoss = top ? Math.floor(topLimitPrice * 0.97) : 0;
+
     return NextResponse.json({
       stocks: allStocks,
-      selected: top ? { code: top.code, name: top.name, score: top.score } : null,
+      selected: top ? {
+        code: top.code, name: top.name, score: top.score,
+        prevClose: topPrevClose, limitPrice: topLimitPrice, stopLoss: topStopLoss,
+      } : null,
       week: weekInfo,
       processedAt: new Date().toISOString(),
     });
