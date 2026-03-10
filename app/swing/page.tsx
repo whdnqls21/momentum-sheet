@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ExcelFrame from '@/components/ExcelFrame';
 import StrategyRulesModal from '@/components/StrategyRulesModal';
 import { canScreenSwing } from '@/lib/tradingHours';
+import { TRADING_RULES } from '@/lib/constants';
 import { fmt, fmtOption } from '@/lib/utils';
 import type { SwingStock, SwingScores } from '@/lib/types';
 
@@ -152,10 +153,13 @@ export default function SwingPage() {
       const topStock = stocks
         .filter((s: SwingStock) => s.pass && s.score >= 60)
         .sort((a: SwingStock, b: SwingStock) => b.score - a.score)[0];
+      const prevClose = topStock?.price || 0;
+      const limitPrice = prevClose ? Math.floor(prevClose * (1 + TRADING_RULES.swing.gapLimit)) : 0;
+      const stopLoss = limitPrice ? Math.floor(limitPrice * (1 + TRADING_RULES.swing.stopLoss / 100)) : 0;
       setResult({
         stocks,
         selected: data.selected_ticker
-          ? { code: data.selected_ticker, name: data.selected_name || '', score: topStock?.score || 0 }
+          ? { code: data.selected_ticker, name: data.selected_name || '', score: topStock?.score || 0, prevClose, limitPrice, stopLoss }
           : null,
         week: { year: data.year, week: data.week_num, label: data.week_label || '' },
         screenDate: data.created_at || data.screen_date || '',
