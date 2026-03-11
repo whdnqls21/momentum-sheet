@@ -360,7 +360,7 @@ export default function SectorPage() {
         </table>
         </div>
 
-        {(!sectorTimeStatus.allowed || !rsiTimeStatus.allowed) && (
+        {(!sectorTimeStatus.allowed || !rsiTimeStatus.allowed) && !(hasTarget && sectorHolding) && (
           <div style={{ padding: '4px 12px', color: '#9c0006', fontSize: 10 }}>
             ⚠ {sectorTimeStatus.reason || rsiTimeStatus.reason}
           </div>

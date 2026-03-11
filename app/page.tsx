@@ -99,6 +99,8 @@ export default function HomePage() {
   useEffect(() => {
     setLoading(true);
     fetchAll().finally(() => setLoading(false));
+    const interval = setInterval(fetchAll, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, [fetchAll]);
 
   const handleRefresh = useCallback(async () => {
