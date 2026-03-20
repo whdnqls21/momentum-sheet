@@ -245,13 +245,13 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
             운영 타임라인
           </div>
 
-          {/* 매일 아침 */}
-          <TimeBlock time="매일 08:00~08:45">
+          {/* 매일 저녁 */}
+          <TimeBlock time="매일 18:00~ (장 마감 후)">
             <ActionCard>
               <div><Tag type="bb" label="볼린저" /> <strong>[스크리닝 실행]</strong></div>
               <div style={{ paddingLeft: 8, marginTop: 2 }}>
                 8개 ETF %B + 거래량 확인
-                <Yes>BUY → 08:50 시장가 매수</Yes>
+                <Yes>BUY → 익일 08:50 지정가 매수</Yes>
                 <Neutral>WATCH → 관찰</Neutral>
                 <No>없음 → 내일 다시</No>
               </div>
@@ -269,8 +269,8 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
                 <ActionCard borderColor="#2E7D32" bg="#E8F5E9">
                   <div><Tag type="sec" label="섹터" /> <strong>[RSI 새로고침]</strong></div>
                   <div style={{ paddingLeft: 8, marginTop: 2 }}>
-                    <Yes>RSI &lt; 50 → 08:50 매수</Yes>
-                    <No>RSI ≥ 50 → 내일 재확인</No>
+                    <Yes>RSI &lt; 50 → 익일 08:50 매수</Yes>
+                    <No>RSI ≥ 50 → 내일 18:00~ 재확인</No>
                     <Neutral>월말 마지막일 → 이번 달 패스</Neutral>
                   </div>
                 </ActionCard>
@@ -355,7 +355,7 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
           </TimeBlock>
 
           {/* 스윙 스크리닝 */}
-          <TimeBlock time="매일(월~금) 08:00~08:45">
+          <TimeBlock time="매일(월~금) 18:00~">
             <BranchBlock
               question="스윙 보유 중 or 이번 주 매수 완료?"
               leftLabel="스크리닝 가능"
@@ -365,8 +365,8 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
                   <div><Tag type="sw" label="스윙" /> <strong>[스크리닝 실행]</strong></div>
                   <div style={{ paddingLeft: 8, marginTop: 2 }}>
                     20종목 스코어링
-                    <Yes>PASS + 60↑ → 08:50 매수</Yes>
-                    <No>미달 → 내일 재스크리닝</No>
+                    <Yes>PASS + 60↑ → 익일 08:50 매수</Yes>
+                    <No>미달 → 내일 18:00~ 재스크리닝</No>
                   </div>
                 </ActionCard>
               }
@@ -417,14 +417,14 @@ export default function TradingFlowModal({ isOpen, onClose }: TradingFlowModalPr
           </TimeBlock>
 
           {/* 매월 초 */}
-          <TimeBlock time="매월 초 08:00~">
+          <TimeBlock time="매월 초 18:00~">
             <ActionCard borderColor="#2E7D32" bg="#E8F5E9">
               <div><Tag type="sec" label="섹터" /> 보유 중이면 → 전월 말 15:20 종가 매도 → 매매일지 기록</div>
               <div style={{ marginTop: 4 }}>
                 <Tag type="sec" label="섹터" /> <strong>[섹터 스크리닝]</strong> → 1위 ETF 확정
               </div>
               <div style={{ paddingLeft: 8 }}>
-                → 이후 매일 08:00 RSI 새로고침으로 진입 대기
+                → 이후 매일 18:00~ RSI 새로고침으로 진입 대기
               </div>
             </ActionCard>
           </TimeBlock>

@@ -114,8 +114,113 @@ export async function GET() {
     const routines: RoutineItem[] = [];
 
     if (kst.isWeekend) {
+      // 주말에도 스크리닝 가능하므로 루틴 표시
+      const weekendRoutines: RoutineItem[] = [];
+
+      // 볼린저 스크리닝
+      if (!screeningStatus.bollinger.done) {
+        weekendRoutines.push({
+          time: '18:00~',
+          tag: 'bb',
+          label: '볼린저',
+          action: '⚠ [스크리닝 실행] 매수 신호 확인 → 월요일 08:50 매수',
+          sheet: '볼린저',
+          sheetPath: '/bollinger',
+          done: false,
+          highlight: false,
+          warn: true,
+        });
+      } else {
+        weekendRoutines.push({
+          time: '18:00~',
+          tag: 'bb',
+          label: '볼린저',
+          action: '✅ 볼린저 스크리닝 완료',
+          sheet: '볼린저',
+          sheetPath: '/bollinger',
+          done: true,
+          highlight: false,
+        });
+      }
+
+      // 섹터
+      if (!screeningStatus.sector.done && !holdings.sector) {
+        weekendRoutines.push({
+          time: '18:00~',
+          tag: 'sec',
+          label: '섹터',
+          action: `⚠ [섹터 스크리닝] ${kst.month + 1}월 진입 대상 확정`,
+          sheet: '섹터로테이션',
+          sheetPath: '/sector',
+          done: false,
+          highlight: false,
+          warn: true,
+        });
+      }
+      if (screeningStatus.sector.done && !holdings.sector && screeningStatus.sector.selectedName) {
+        weekendRoutines.push({
+          time: '18:00~',
+          tag: 'sec',
+          label: '섹터',
+          action: `[RSI 새로고침] RSI < 50 확인 → 월요일 08:50 매수 (${screeningStatus.sector.selectedName})`,
+          sheet: '섹터로테이션',
+          sheetPath: '/sector',
+          done: false,
+          highlight: false,
+        });
+      }
+
+      // 스윙
+      const { data: swingBuysWknd } = await supabase
+        .from('journal')
+        .select('id, buy_date')
+        .eq('strategy', 'swing')
+        .gte('buy_date', kst.mondayStr)
+        .limit(1);
+      const boughtThisWeekWknd = !!(swingBuysWknd && swingBuysWknd.length > 0);
+
+      if (holdings.swing) {
+        weekendRoutines.push({
+          time: '18:00~',
+          tag: 'sw',
+          label: '스윙',
+          action: `보유 중: ${holdings.swing.ticker_name} — 매도 후 스크리닝 가능`,
+          sheet: '단기스윙',
+          sheetPath: '/swing',
+          done: true,
+          highlight: false,
+        });
+      } else if (boughtThisWeekWknd) {
+        weekendRoutines.push({
+          time: '18:00~',
+          tag: 'sw',
+          label: '스윙',
+          action: '✅ 이번 주 매수 완료 — 다음 주 스크리닝 가능',
+          sheet: '단기스윙',
+          sheetPath: '/swing',
+          done: true,
+          highlight: false,
+        });
+      } else {
+        weekendRoutines.push({
+          time: '18:00~',
+          tag: 'sw',
+          label: '스윙',
+          action: '⚠ [스크리닝 실행] PASS+60↑ 확인 → 월요일 08:50 매수',
+          sheet: '단기스윙',
+          sheetPath: '/swing',
+          done: false,
+          highlight: false,
+          warn: true,
+        });
+      }
+
+      // 하이라이트: 미완료 중 첫 항목
+      const firstPendingWknd = weekendRoutines.find(r => !r.done);
+      if (firstPendingWknd) firstPendingWknd.highlight = true;
+
       return NextResponse.json({
-        routines: [],
+        routines: weekendRoutines,
         holdings,
         screeningStatus,
         dayOfWeek: kst.day,
@@ -129,7 +234,7 @@ export async function GET() {
     // 볼린저 스크리닝 (매일 08:00~)
     if (screeningStatus.bollinger.done) {
       routines.push({
-        time: '08:00~',
+        time: '18:00~',
         tag: 'bb',
         label: '볼린저',
         action: '✅ 볼린저 스크리닝 완료',
@@ -140,10 +245,10 @@ export async function GET() {
       });
     } else {
       routines.push({
-        time: '08:00~',
+        time: '18:00~',
         tag: 'bb',
         label: '볼린저',
-        action: '⚠ [스크리닝 실행] 매수 신호 확인 → 08:50 매수',
+        action: '⚠ [스크리닝 실행] 매수 신호 확인 → 익일 08:50 매수',
         sheet: '볼린저',
         sheetPath: '/bollinger',
         done: false,
@@ -170,7 +275,7 @@ export async function GET() {
     // 이번 달 타겟 없음 → 스크리닝 필요
     if (!screeningStatus.sector.done && !holdings.sector) {
       routines.push({
-        time: '08:00~',
+        time: '18:00~',
         tag: 'sec',
         label: '섹터',
         action: `⚠ [섹터 스크리닝] ${kst.month + 1}월 진입 대상 확정`,
@@ -185,10 +290,10 @@ export async function GET() {
     // 타겟 있음 + 미보유 → RSI 대기
     if (screeningStatus.sector.done && !holdings.sector && screeningStatus.sector.selectedName) {
       routines.push({
-        time: '08:00~',
+        time: '18:00~',
         tag: 'sec',
         label: '섹터',
-        action: `[RSI 새로고침] RSI < 50 확인 → 08:50 매수 (${screeningStatus.sector.selectedName})`,
+        action: `[RSI 새로고침] RSI < 50 확인 → 익일 08:50 매수 (${screeningStatus.sector.selectedName})`,
         sheet: '섹터로테이션',
         sheetPath: '/sector',
         done: false,
@@ -237,7 +342,7 @@ export async function GET() {
     // 스윙 스크리닝 상태 — 잠금: 보유 중 or 이번 주 매수 완료
     if (holdings.swing) {
       routines.push({
-        time: '08:00~',
+        time: '18:00~',
         tag: 'sw',
         label: '스윙',
         action: `보유 중: ${holdings.swing.ticker_name} — 매도 후 스크리닝 가능`,
@@ -248,7 +353,7 @@ export async function GET() {
       });
     } else if (boughtThisWeek) {
       routines.push({
-        time: '08:00~',
+        time: '18:00~',
         tag: 'sw',
         label: '스윙',
         action: '✅ 이번 주 매수 완료 — 다음 주 스크리닝 가능',
@@ -259,10 +364,10 @@ export async function GET() {
       });
     } else {
       routines.push({
-        time: '08:00~',
+        time: '18:00~',
         tag: 'sw',
         label: '스윙',
-        action: '⚠ [스크리닝 실행] PASS+60↑ 확인 → 08:50 매수',
+        action: '⚠ [스크리닝 실행] PASS+60↑ 확인 → 익일 08:50 매수',
         sheet: '단기스윙',
         sheetPath: '/swing',
         done: false,
@@ -273,9 +378,9 @@ export async function GET() {
 
     // 시간순 정렬
     const timeOrder: Record<string, number> = {
-      '08:00~': 1,
-      '장중': 2,
-      '15:20': 3,
+      '장중': 1,
+      '15:20': 2,
+      '18:00~': 3,
     };
     routines.sort((a, b) => (timeOrder[a.time] || 99) - (timeOrder[b.time] || 99));
 

@@ -640,7 +640,7 @@ export default function BollingerPage() {
                       <div style={{ fontSize: 11, color: '#666' }}>
                         조건: %B &lt; 0.10 AND 거래량 ≥ 1.5배
                         <br />
-                        <span style={{ fontSize: 10, color: '#999' }}>내일 08:00에 다시 확인하세요.</span>
+                        <span style={{ fontSize: 10, color: '#999' }}>오늘 18:00 이후 다시 확인하세요.</span>
                       </div>
                     </td>
                   </tr>

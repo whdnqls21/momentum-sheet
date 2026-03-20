@@ -449,7 +449,7 @@ export default function SectorPage() {
                             backgroundColor: '#FFF3E0', color: '#e65100', fontWeight: 700, fontSize: 11,
                             width: 'fit-content',
                           }}>
-                            ⏳ 대기 — RSI {lockedTarget.rsi !== null ? lockedTarget.rsi.toFixed(1) : '—'}, 내일 08:00 재확인
+                            ⏳ 대기 — RSI {lockedTarget.rsi !== null ? lockedTarget.rsi.toFixed(1) : '—'}, 18:00 이후 재확인
                           </div>
                         )}
                         {lockedTarget.signal === 'NO_DATA' && (
@@ -568,7 +568,7 @@ export default function SectorPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <tbody>
             <tr><td colSpan={2} style={RS.header}>기본 정보</td></tr>
-            <tr><td style={RS.label}>주기</td><td style={RS.val}>월 1회 (월초 스크리닝 → RSI 대기 → 08:50 매수)</td></tr>
+            <tr><td style={RS.label}>주기</td><td style={RS.val}>월 1회 (월초 18:00~ 스크리닝 → RSI 대기 → 익일 08:50 매수)</td></tr>
             <tr><td style={RS.label}>종목풀</td><td style={RS.val}>7개 고정 섹터 ETF: KODEX 반도체, KODEX 자동차, KODEX 은행, KODEX 철강, KODEX 건설, TIGER 2차전지테마, KODEX 바이오</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>선정 기준</td></tr>
@@ -578,7 +578,7 @@ export default function SectorPage() {
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>진입 필터 (RSI)</td></tr>
             <tr><td style={RS.label}>RSI(3) &lt; 50</td><td style={RS.val}>진입 가능 (08:50 매수)</td></tr>
-            <tr><td style={RS.label}>RSI(3) ≥ 50</td><td style={RS.val}>대기 (매일 08:00 재확인)</td></tr>
+            <tr><td style={RS.label}>RSI(3) ≥ 50</td><td style={RS.val}>대기 (매일 18:00~ 재확인)</td></tr>
             <tr><td style={RS.label}>월말까지 미달</td><td style={RS.val}>해당 월 패스 (현금 유지)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매매 규칙</td></tr>

@@ -416,7 +416,7 @@ export default function SwingPage() {
                       <div style={{ fontSize: 11, color: '#666' }}>
                         조건: PASS + 60점 이상 종목 없음
                         <br />
-                        <span style={{ fontSize: 10, color: '#999' }}>내일 08:00에 다시 확인하세요.</span>
+                        <span style={{ fontSize: 10, color: '#999' }}>오늘 18:00 이후 다시 확인하세요.</span>
                       </div>
                     </td>
                   </tr>
@@ -508,7 +508,7 @@ export default function SwingPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <tbody>
             <tr><td colSpan={2} style={{ ...RS.header }}>기본 정보</td></tr>
-            <tr><td style={RS.label}>주기</td><td style={RS.val}>매일(월~금) 08:00 스크리닝, 주 1회 매수 (08:50 시장가)</td></tr>
+            <tr><td style={RS.label}>주기</td><td style={RS.val}>매일(월~금) 18:00~ 스크리닝, 주 1회 매수 (익일 08:50 시장가)</td></tr>
             <tr><td style={RS.label}>종목풀</td><td style={RS.val}>1차 고정 10종목 + 2차 동적 10종목 (API 자동수집)</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>스코어링 (100점 만점)</td></tr>
