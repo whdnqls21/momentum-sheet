@@ -275,7 +275,7 @@ function scoreStock(data: StockData, pool: '1차' | '2차'): SwingStock {
   const score = Object.values(scores).reduce((a, b) => a + b, 0);
 
   // 필터
-  const pass = price > ma5 && slopeVal > 0 && volRatio >= 0.8;
+  const pass = price > ma5 && slopeVal > 0 && volRatio >= 0.8 && gapRatio < TRADING_RULES.swing.maxGapRatio && ma5Gap < TRADING_RULES.swing.maxMa5Gap;
 
   return {
     code: data.code,

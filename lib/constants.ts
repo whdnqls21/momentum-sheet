@@ -48,6 +48,8 @@ export const TRADING_RULES = {
     takeProfit: 7,    // +7%
     stopLoss: -3,     // -3%
     gapLimit: 0.02,   // 지정가: 전일종가 +2%
+    maxGapRatio: 120, // 이격도 상한 (MA20 대비 과열 방지)
+    maxMa5Gap: 10,    // 5일선이격 상한 (MA5 대비 과열 방지)
     tpAlert: 6,       // 임박: +6%
     slAlert: -2,      // 임박: -2%
     clearDay: 'friday' as const,

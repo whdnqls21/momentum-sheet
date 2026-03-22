@@ -522,7 +522,7 @@ export default function SwingPage() {
             <tr><td style={RS.label}>이격도 적정성</td><td style={RS.val}>15점 — 현재가 / MA20 = 100~105% → 만점</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>필터 조건</td></tr>
-            <tr><td colSpan={2} style={RS.val}>현재가 &gt; MA5 AND 20일선 기울기 &gt; 0 AND 거래량비율 ≥ 0.8</td></tr>
+            <tr><td colSpan={2} style={RS.val}>현재가 &gt; MA5 AND 20일선 기울기 &gt; 0 AND 거래량비율 ≥ 0.8 AND 이격도 &lt; 120% AND 5일선이격 &lt; 10%</td></tr>
 
             <tr><td colSpan={2} style={{ ...RS.header, paddingTop: 10 }}>매수 조건</td></tr>
             <tr><td colSpan={2} style={RS.val}>PASS + 60점 이상 + 전체 1위 (동점 시 1차 풀 우선)</td></tr>
