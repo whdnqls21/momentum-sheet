@@ -176,6 +176,7 @@ export async function GET() {
         .select('id, buy_date')
         .eq('strategy', 'swing')
         .gte('buy_date', kst.mondayStr)
+        .is('sell_date', null)
         .limit(1);
       const boughtThisWeekWknd = !!(swingBuysWknd && swingBuysWknd.length > 0);
 
@@ -195,7 +196,7 @@ export async function GET() {
           time: '18:00~',
           tag: 'sw',
           label: '스윙',
-          action: '✅ 이번 주 매수 완료 — 다음 주 스크리닝 가능',
+          action: '✅ 이번 주 미청산 보유 중 — 매도 후 스크리닝 가능',
           sheet: '단기스윙',
           sheetPath: '/swing',
           done: true,
@@ -322,6 +323,7 @@ export async function GET() {
       .select('id, buy_date')
       .eq('strategy', 'swing')
       .gte('buy_date', kst.mondayStr)
+      .is('sell_date', null)
       .limit(1);
     const boughtThisWeek = !!(swingBuys && swingBuys.length > 0);
 
@@ -356,7 +358,7 @@ export async function GET() {
         time: '18:00~',
         tag: 'sw',
         label: '스윙',
-        action: '✅ 이번 주 매수 완료 — 다음 주 스크리닝 가능',
+        action: '✅ 이번 주 미청산 보유 중 — 매도 후 스크리닝 가능',
         sheet: '단기스윙',
         sheetPath: '/swing',
         done: true,

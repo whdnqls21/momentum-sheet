@@ -134,9 +134,9 @@ export default function SwingPage() {
     ]).then(([openData, allData]) => {
       // 보유 중 (sell_date IS NULL)
       setSwingHolding(Array.isArray(openData) && openData.length > 0);
-      // 이번 주 매수 이력 (buy_date >= 이번 주 월요일)
+      // 이번 주 미청산 매수 이력 (buy_date >= 이번 주 월요일 + sell_date IS NULL)
       if (Array.isArray(allData)) {
-        setBoughtThisWeek(allData.some((j: any) => j.buy_date >= monday));
+        setBoughtThisWeek(allData.some((j: any) => j.buy_date >= monday && !j.sell_date));
       }
     }).catch(() => {});
   }, []);
@@ -274,7 +274,7 @@ export default function SwingPage() {
                     className="btn-ribbon"
                     onClick={handleRun}
                     disabled={loading || !timeStatus.allowed || locked}
-                    title={swingHolding ? '보유 종목 매도 후 스크리닝 가능' : boughtThisWeek ? '이번 주 스크리닝 완료' : timeStatus.reason}
+                    title={swingHolding ? '보유 종목 매도 후 스크리닝 가능' : boughtThisWeek ? '이번 주 미청산 보유 중 — 매도 후 스크리닝 가능' : timeStatus.reason}
                     style={loading ? { backgroundColor: '#e2efda' } : (!timeStatus.allowed || locked) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {loading ? '⏳ 스크리닝 중...' : '▶ 스크리닝 실행'}
@@ -327,7 +327,7 @@ export default function SwingPage() {
 
         {!loading && !swingHolding && boughtThisWeek && (
           <div style={{ padding: '4px 12px', color: '#006100', fontSize: 10, fontWeight: 600 }}>
-            ✅ 이번 주 매수 완료 — 다음 주 스크리닝 가능
+            ✅ 이번 주 미청산 보유 중 — 매도 후 스크리닝 가능
           </div>
         )}
 
