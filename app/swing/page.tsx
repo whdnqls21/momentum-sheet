@@ -106,6 +106,8 @@ export default function SwingPage() {
   const [timeStatus, setTimeStatus] = useState(canScreenSwing());
   const [thisWeekMonday, setThisWeekMonday] = useState(() => getThisWeekMonday());
   const [swingHolding, setSwingHolding] = useState(false);
+  const [filterExpanded, setFilterExpanded] = useState(false);
+  const [scoreExpanded, setScoreExpanded] = useState(false);
   const [boughtThisWeek, setBoughtThisWeek] = useState(false);
 
   // 이번 주 스크리닝 완료 여부 (드롭다운용)
@@ -430,40 +432,62 @@ export default function SwingPage() {
               <table style={{ borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr>
-                    <th style={{ ...S.section, textAlign: 'left' }} colSpan={28}>
+                    <th style={{ ...S.section, textAlign: 'left' }} colSpan={999}>
                       통합 순위 (1차 {stocks.filter(s => s.pool === '1차').length}종목 + 2차 {stocks.filter(s => s.pool === '2차').length}종목)
                     </th>
                   </tr>
                   {/* 그룹 헤더 */}
                   <tr>
-                    <th style={S.th} rowSpan={2}>#</th>
-                    <th style={S.th} rowSpan={2}>풀</th>
-                    <th style={S.th} rowSpan={2}>종목코드</th>
-                    <th style={{ ...S.th, textAlign: 'left' }} rowSpan={2}>종목명</th>
-                    <th style={S.th} rowSpan={2}>현재가</th>
-                    <th style={{ ...S.th, backgroundColor: '#fce4ec', color: '#9c0006', fontSize: 9 }} colSpan={5}>
-                      필터 조건 (전부 충족 시 PASS)
+                    <th style={S.th} rowSpan={filterExpanded || scoreExpanded ? 2 : 1}>#</th>
+                    <th style={S.th} rowSpan={filterExpanded || scoreExpanded ? 2 : 1}>풀</th>
+                    <th style={S.th} rowSpan={filterExpanded || scoreExpanded ? 2 : 1}>종목코드</th>
+                    <th style={{ ...S.th, textAlign: 'left' }} rowSpan={filterExpanded || scoreExpanded ? 2 : 1}>종목명</th>
+                    <th style={S.th} rowSpan={filterExpanded || scoreExpanded ? 2 : 1}>현재가</th>
+                    {/* 필터 그룹 */}
+                    <th
+                      style={{ ...S.th, backgroundColor: '#FFF3E0', color: '#e65100', fontSize: 9, cursor: 'pointer', userSelect: 'none' }}
+                      colSpan={filterExpanded ? 6 : 1}
+                      rowSpan={filterExpanded ? 1 : (filterExpanded || scoreExpanded ? 2 : 1)}
+                      onClick={() => setFilterExpanded(v => !v)}
+                    >
+                      필터 {filterExpanded ? '▼' : '▶'}
                     </th>
-                    <th style={S.th} rowSpan={2}>필터</th>
-                    <th style={S.th} rowSpan={2}>총점</th>
-                    <th style={{ ...S.th, backgroundColor: '#dce6f1', color: '#1f3864', fontSize: 9 }} colSpan={16}>
-                      스코어링 (100점 만점)
+                    {/* 점수 그룹 */}
+                    <th
+                      style={{ ...S.th, backgroundColor: '#E3F2FD', color: '#1565c0', fontSize: 9, cursor: 'pointer', userSelect: 'none' }}
+                      colSpan={scoreExpanded ? 17 : 1}
+                      rowSpan={scoreExpanded ? 1 : (filterExpanded || scoreExpanded ? 2 : 1)}
+                      onClick={() => setScoreExpanded(v => !v)}
+                    >
+                      점수 {scoreExpanded ? '▼' : '▶'}
                     </th>
                   </tr>
-                  {/* 세부 헤더 */}
-                  <tr>
-                    <th style={{ ...S.th, backgroundColor: '#fce4ec', fontSize: 9 }}>거래량비</th>
-                    <th style={{ ...S.th, backgroundColor: '#fce4ec', fontSize: 9 }}>MA5상회</th>
-                    <th style={{ ...S.th, backgroundColor: '#fce4ec', fontSize: 9 }}>기울기&gt;0</th>
-                    <th style={{ ...S.th, backgroundColor: '#fce4ec', fontSize: 9 }}>이격&lt;120</th>
-                    <th style={{ ...S.th, backgroundColor: '#fce4ec', fontSize: 9 }}>5일&lt;10</th>
-                    {SCORE_LABELS.map((sl) => (
-                      <React.Fragment key={sl.key}>
-                        <th style={{ ...S.th, backgroundColor: '#E3F2FD', fontSize: 9 }}>{sl.label}</th>
-                        <th style={{ ...S.th, fontSize: 9 }}>{sl.max}점</th>
-                      </React.Fragment>
-                    ))}
-                  </tr>
+                  {/* 세부 헤더 (어느 한쪽이라도 펼쳐져 있을 때) */}
+                  {(filterExpanded || scoreExpanded) && (
+                    <tr>
+                      {filterExpanded && (
+                        <>
+                          <th style={{ ...S.th, backgroundColor: '#FFF3E0', fontSize: 9 }}>거래량비</th>
+                          <th style={{ ...S.th, backgroundColor: '#FFF3E0', fontSize: 9 }}>MA5상회</th>
+                          <th style={{ ...S.th, backgroundColor: '#FFF3E0', fontSize: 9 }}>기울기&gt;0</th>
+                          <th style={{ ...S.th, backgroundColor: '#FFF3E0', fontSize: 9 }}>이격&lt;120</th>
+                          <th style={{ ...S.th, backgroundColor: '#FFF3E0', fontSize: 9 }}>5일&lt;10</th>
+                          <th style={{ ...S.th, fontSize: 9 }}>결과</th>
+                        </>
+                      )}
+                      {scoreExpanded && (
+                        <>
+                          <th style={{ ...S.th, fontSize: 9 }}>총점</th>
+                          {SCORE_LABELS.map((sl) => (
+                            <React.Fragment key={sl.key}>
+                              <th style={{ ...S.th, backgroundColor: '#E3F2FD', fontSize: 9 }}>{sl.label}</th>
+                              <th style={{ ...S.th, fontSize: 9 }}>{sl.max}점</th>
+                            </React.Fragment>
+                          ))}
+                        </>
+                      )}
+                    </tr>
+                  )}
                 </thead>
                 <tbody>
                   {sorted.map((s, i) => {
@@ -481,6 +505,20 @@ export default function SwingPage() {
                       backgroundColor: ok ? '#c6efce' : '#ffc7ce',
                       color: ok ? '#006100' : '#9c0006',
                     });
+                    const passTd = (
+                      <td style={{
+                        ...S.tdC, fontSize: 10, fontWeight: 600,
+                        backgroundColor: s.pass ? '#c6efce' : '#ffc7ce',
+                        color: s.pass ? '#006100' : '#9c0006',
+                      }}>
+                        {s.pass ? 'PASS' : 'FAIL'}
+                      </td>
+                    );
+                    const scoreTd = (
+                      <td style={{ ...S.td, fontWeight: 700, color: s.score >= 60 ? '#006100' : s.score >= 40 ? '#bf8f00' : '#9c0006' }}>
+                        {s.score}
+                      </td>
+                    );
 
                     return (
                       <tr key={s.code} style={{ backgroundColor: rowBg }}>
@@ -492,35 +530,37 @@ export default function SwingPage() {
                           {s.error && <span style={{ color: '#9c0006', fontSize: 9 }}> ({s.error})</span>}
                         </td>
                         <td style={S.td}>{s.price > 0 ? fmt(s.price) : '—'}</td>
-                        {/* 필터 5개 */}
-                        <td style={fc(filterChecks[0])}>{s.raw.volRatio.toFixed(2)}</td>
-                        <td style={fc(filterChecks[1])}>{filterChecks[1] ? 'Y' : 'N'}</td>
-                        <td style={fc(filterChecks[2])}>{filterChecks[2] ? 'Y' : 'N'}</td>
-                        <td style={fc(filterChecks[3])}>{s.raw.gapRatio.toFixed(1)}%</td>
-                        <td style={fc(filterChecks[4])}>{s.raw.ma5Gap.toFixed(1)}%</td>
-                        {/* PASS/FAIL */}
-                        <td style={{
-                          ...S.tdC, fontSize: 10, fontWeight: 600,
-                          backgroundColor: s.pass ? '#c6efce' : '#ffc7ce',
-                          color: s.pass ? '#006100' : '#9c0006',
-                        }}>
-                          {s.pass ? 'PASS' : 'FAIL'}
-                        </td>
-                        {/* 총점 */}
-                        <td style={{ ...S.td, fontWeight: 700, color: s.score >= 60 ? '#006100' : s.score >= 40 ? '#bf8f00' : '#9c0006' }}>
-                          {s.score}
-                        </td>
-                        {/* 스코어링 8개 */}
-                        {SCORE_LABELS.map((sl) => (
-                          <React.Fragment key={sl.key}>
-                            <td style={{ ...S.tdC, fontSize: 10, backgroundColor: '#E3F2FD' }}>
-                              {rawLabel(sl.key, s.raw)}
-                            </td>
-                            <td style={{ ...S.tdC, fontSize: 10, color: scoreColor(s.scores[sl.key], sl.max), fontWeight: s.scores[sl.key] === sl.max ? 700 : 400 }}>
-                              {s.scores[sl.key]}
-                            </td>
-                          </React.Fragment>
-                        ))}
+                        {/* 필터 그룹 */}
+                        {filterExpanded ? (
+                          <>
+                            <td style={fc(filterChecks[0])}>{s.raw.volRatio.toFixed(2)}</td>
+                            <td style={fc(filterChecks[1])}>{filterChecks[1] ? 'Y' : 'N'}</td>
+                            <td style={fc(filterChecks[2])}>{filterChecks[2] ? 'Y' : 'N'}</td>
+                            <td style={fc(filterChecks[3])}>{s.raw.gapRatio.toFixed(1)}%</td>
+                            <td style={fc(filterChecks[4])}>{s.raw.ma5Gap.toFixed(1)}%</td>
+                            {passTd}
+                          </>
+                        ) : (
+                          passTd
+                        )}
+                        {/* 점수 그룹 */}
+                        {scoreExpanded ? (
+                          <>
+                            {scoreTd}
+                            {SCORE_LABELS.map((sl) => (
+                              <React.Fragment key={sl.key}>
+                                <td style={{ ...S.tdC, fontSize: 10, backgroundColor: '#E3F2FD' }}>
+                                  {rawLabel(sl.key, s.raw)}
+                                </td>
+                                <td style={{ ...S.tdC, fontSize: 10, color: scoreColor(s.scores[sl.key], sl.max), fontWeight: s.scores[sl.key] === sl.max ? 700 : 400 }}>
+                                  {s.scores[sl.key]}
+                                </td>
+                              </React.Fragment>
+                            ))}
+                          </>
+                        ) : (
+                          scoreTd
+                        )}
                       </tr>
                     );
                   })}
