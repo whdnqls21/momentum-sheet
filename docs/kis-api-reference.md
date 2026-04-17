@@ -251,6 +251,87 @@
 
 ---
 
+## 8. 해외주식 현재가상세 (HHDFS76200200)
+
+- **Method**: GET
+- **URL**: `/uapi/overseas-price/v1/quotations/price-detail`
+- **tr_id**: `HHDFS76200200`
+
+### Request Query Parameters
+```json
+{
+  "AUTH": "",
+  "EXCD": "NAS",
+  "SYMB": "TQQQ"
+}
+```
+
+### Response 주요 필드 (output)
+- `last`: 현재가
+- `base`: 전일종가
+- `h52p`: 52주최고가
+- `l52p`: 52주최저가
+- `t_rate`: 당일환율
+
+---
+
+## 9. 해외주식 잔고 (TTTS3012R)
+
+- **Method**: GET
+- **URL**: `/uapi/overseas-stock/v1/trading/inquire-balance`
+- **tr_id**: `TTTS3012R`
+
+### Request Query Parameters
+```json
+{
+  "CANO": "계좌번호 앞 8자리",
+  "ACNT_PRDT_CD": "01",
+  "OVRS_EXCG_CD": "NASD",
+  "TR_CRCY_CD": "USD",
+  "CTX_AREA_FK200": "",
+  "CTX_AREA_NK200": ""
+}
+```
+
+### Response 주요 필드 (output1 배열)
+- `ovrs_pdno`: 종목코드 (TQQQ)
+- `pchs_avg_pric`: 매입평균가격 (= 평단가)
+- `ovrs_cblc_qty`: 보유수량
+- `frcr_pchs_amt1`: 외화매입금액
+- `ovrs_stck_evlu_amt`: 평가금액
+- `frcr_evlu_pfls_amt`: 외화평가손익
+- `evlu_pfls_rt`: 평가손익율
+- `now_pric2`: 현재가
+
+---
+
+## 10. 해외주식 기간별시세 (HHDFS76240000)
+
+- **Method**: GET
+- **URL**: `/uapi/overseas-price/v1/quotations/dailyprice`
+- **tr_id**: `HHDFS76240000`
+
+### Request Query Parameters
+```json
+{
+  "AUTH": "",
+  "EXCD": "NAS",
+  "SYMB": "TQQQ",
+  "GUBN": "0",
+  "BYMD": "",
+  "MODP": "1"
+}
+```
+
+### Response 주요 필드 (output2 배열)
+- `xymd`: 일자 (YYYYMMDD)
+- `clos`: 종가
+- `open`: 시가
+- `high`: 고가
+- `low`: 저가
+
+---
+
 ## 공통 Request Headers
 
 모든 API에 필수:

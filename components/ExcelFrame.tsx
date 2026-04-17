@@ -12,6 +12,8 @@ interface Sheet {
 }
 
 const SHEETS: Sheet[] = [
+  { id: 'infinite',  label: '무한매수',     path: '/infinite',  formula: '=IF(현재가>평단가, 5:5분할LOC, 현재가LOC)  |  익절=평단가×1.10', description: 'TQQQ/SOXL 무한매수법 · 사이클 관리' },
+  { id: 'infinite-journal', label: '무한매수일지', path: '/infinite-journal', formula: '=SUMIF(사이클, "*", 수익USD)  |  환전합산', description: '무한매수 매매일지 · 사이클별 수익' },
   { id: 'balance',  label: '잔고현황',     path: '/',        formula: '=한투API(TTTC8434R, 잔고조회)', description: '한국투자증권 · 보유종목 현황' },
   { id: 'swing',    label: '단기스윙',     path: '/swing',   formula: '=RANK(총점, 1차풀+2차풀, 0)  |  필터: 현재가>MA5 AND 기울기>0 AND 거래량비≥0.8 AND 이격도<120% AND 5일선이격<10%', description: '금요일 스크리닝 → 월요일 매수' },
   { id: 'sector',   label: '섹터로테이션', path: '/sector',  formula: '=ROUND(1M수익률*0.6 + 3M수익률*0.4, 2)', description: '월말 스크리닝 → 첫 거래일 매수' },
@@ -21,10 +23,10 @@ const SHEETS: Sheet[] = [
 ];
 
 const MOBILE_ICONS: Record<string, string> = {
-  balance: '📊', swing: '⚡', sector: '🔄', bollinger: '📉', journal: '📝', analysis: '📈',
+  infinite: '♾️', 'infinite-journal': '📋', balance: '📊', swing: '⚡', sector: '🔄', bollinger: '📉', journal: '📝', analysis: '📈',
 };
 const MOBILE_LABELS: Record<string, string> = {
-  balance: '홈', swing: '스윙', sector: '섹터', bollinger: '볼린저', journal: '일지', analysis: '분석',
+  infinite: '무한', 'infinite-journal': '무한일지', balance: '홈', swing: '스윙', sector: '섹터', bollinger: '볼린저', journal: '일지', analysis: '분석',
 };
 
 interface ExcelFrameProps {

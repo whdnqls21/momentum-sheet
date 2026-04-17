@@ -62,6 +62,42 @@ export interface SwingStock {
   error?: string;
 }
 
+// ── 무한매수법 ──
+export interface InfiniteBuyCycle {
+  id: string;
+  cycle_num: number;
+  ticker: string;
+  start_date: string;
+  end_date: string | null;
+  total_slots: number;
+  used_slots: number;
+  initial_fund_krw: number;
+  initial_fund_usd: number | null;
+  slot_amount_usd: number | null;
+  status: 'active' | 'completed' | 'stopped';
+  total_invested_usd: number | null;
+  total_sell_usd: number | null;
+  profit_usd: number | null;
+  profit_rate: number | null;
+  created_at: string;
+}
+
+export interface InfiniteBuyJournal {
+  id: string;
+  cycle_num: number;
+  record_type: 'buy' | 'sell' | 'exchange';
+  ticker: string;
+  trade_date: string;
+  slot_num: number | null;
+  price: number | null;
+  quantity: number | null;
+  amount_usd: number | null;
+  amount_krw: number | null;
+  exchange_rate: number | null;
+  notes: string | null;
+  created_at: string;
+}
+
 // ── 매매일지 ──
 export interface JournalEntry {
   id: string;

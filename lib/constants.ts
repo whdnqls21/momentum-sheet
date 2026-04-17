@@ -74,6 +74,19 @@ export const TRADING_RULES = {
   },
 } as const;
 
+// ── 무한매수법 종목 ──
+export const INFINITE_BUY_STOCKS = [
+  { ticker: 'TQQQ', name: 'ProShares UltraPro QQQ', excd: 'NAS' },
+  { ticker: 'SOXL', name: 'Direxion Daily Semiconductor Bull 3X', excd: 'NAS' },
+] as const;
+
+export const INFINITE_BUY_PARAMS = {
+  totalFundKRW: 4_000_000,
+  totalSlots: 40,
+  tpMultiplier: 1.10,   // 평단가 × 1.10 익절
+  secureMultiplier: 1.15, // 확보용 LOC: 평단가 × 1.15
+} as const;
+
 // ── 한투 API ──
 export const KIS_BASE_URL = 'https://openapi.koreainvestment.com:9443';
 
@@ -85,4 +98,8 @@ export const KIS_TR_IDS = {
   VOLUME_RANK: 'FHPST01710000',   // 거래량순위
   NEW_HIGH: 'FHPST01870000',      // 신고근접
   BALANCE: 'TTTC8434R',           // 잔고조회
+  // 해외주식
+  OS_PRICE_DETAIL: 'HHDFS76200200',  // 해외주식 현재가상세
+  OS_BALANCE: 'TTTS3012R',           // 해외주식 잔고
+  OS_DAILY_PRICE: 'HHDFS76240000',   // 해외주식 기간별시세
 } as const;
