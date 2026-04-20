@@ -342,44 +342,127 @@ export default function InfiniteBuyPage() {
         </div>
       )}
 
-      {/* ── 원금 대비 누적 수익 요약 ── */}
-      {totalExKRW > 0 && (
-        <>
-          <div style={S.section}>원금 대비 누적 수익</div>
-          <div style={S.card}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <tbody>
-                <tr>
-                  <td style={{ ...S.td, color: '#666', width: '20%' }}>투입 원금</td>
-                  <td style={{ ...S.tdR, width: '30%' }}>{fmtKRW(totalExKRW)} ≈ {fmtUSD(totalExUSD)}</td>
-                  <td style={{ ...S.td, color: '#666', width: '20%' }}>환율</td>
-                  <td style={{ ...S.tdR, width: '30%' }}>{exchangeRate.toLocaleString()}원/$</td>
-                </tr>
-                <tr>
-                  <td style={{ ...S.td, color: '#666' }}>실현 수익</td>
-                  <td style={{ ...S.tdR, color: realizedUSD >= 0 ? '#006100' : '#9c0006' }}>
-                    {realizedUSD >= 0 ? '+' : ''}{fmtUSD(realizedUSD)}
-                  </td>
-                  <td style={{ ...S.td, color: '#666' }}>미실현 수익</td>
-                  <td style={{ ...S.tdR, color: unrealizedUSD >= 0 ? '#006100' : '#9c0006' }}>
-                    {unrealizedUSD >= 0 ? '+' : ''}{fmtUSD(unrealizedUSD)}
-                  </td>
-                </tr>
-                <tr style={{ backgroundColor: '#f5f5f5' }}>
-                  <td style={{ ...S.td, color: '#666', fontWeight: 600 }}>누적 수익</td>
-                  <td style={{ ...S.tdR, color: totalProfitUSD >= 0 ? '#006100' : '#9c0006', fontWeight: 600 }}>
-                    {totalProfitUSD >= 0 ? '+' : ''}{fmtUSD(totalProfitUSD)} ≈ {totalProfitKRW >= 0 ? '+' : ''}{totalProfitKRW.toLocaleString()}원
-                  </td>
-                  <td style={{ ...S.td, color: '#666', fontWeight: 600 }}>원금 대비</td>
-                  <td style={{ ...S.tdR, color: profitPct >= 0 ? '#006100' : '#9c0006', fontWeight: 700, fontSize: 13 }}>
-                    {fmtPct(profitPct)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+      {/* ── 🔔 오늘의 할 일 (최상단 강조) ── */}
+      {mode === 'status' && status && (() => {
+        const cmp = status.balance.currentPrice > status.balance.avgPrice ? '>'
+                  : status.balance.currentPrice < status.balance.avgPrice ? '<' : '=';
+        const cmpColor = cmp === '>' ? '#c00000' : cmp === '<' ? '#1565C0' : '#5d4037';
+        const highlightBg = '#FFF9C4';  // Excel 강조 셀 (연노랑)
+        return (
+          <>
+            <div style={S.section}>
+              🔔 오늘의 할 일 — {status.cycle.ticker} (사이클 #{status.cycle.cycleNum})
+            </div>
+            <div style={S.card}>
+              {/* 현재가 / 평단가 / 비교 — 페어 사이 스페이서 열 */}
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ ...S.td, color: '#333', fontWeight: 700, width: '13%' }}>현재가</td>
+                    <td style={{ ...S.tdR, width: '20%', backgroundColor: highlightBg, fontWeight: 700 }}>
+                      {fmtUSD(status.balance.currentPrice)}
+                    </td>
+                    <td style={{ borderBottom: '1px solid #e0e0e0', width: '2%' }}></td>
+                    <td style={{ ...S.td, color: '#333', fontWeight: 700, width: '13%' }}>평단가</td>
+                    <td style={{ ...S.tdR, width: '20%', backgroundColor: highlightBg, fontWeight: 700 }}>
+                      {fmtUSD(status.balance.avgPrice)}
+                    </td>
+                    <td style={{ borderBottom: '1px solid #e0e0e0', width: '2%' }}></td>
+                    <td style={{ ...S.td, color: '#666', width: '10%' }}>상태</td>
+                    <td style={{ ...S.tdR, width: '20%', color: cmpColor, fontWeight: 700, fontFamily: 'inherit' }}>
+                      현재가 {cmp} 평단가
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ ...S.td, color: '#666' }}>판단</td>
+                    <td style={{ ...S.td, fontSize: 11, color: '#333' }} colSpan={7}>
+                      {status.todayOrders.condition}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* LOC 매수 */}
+            <div style={S.section}>LOC 매수</div>
+            <div style={S.card}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {([
+                      ['구분', 'L'], ['주문가', 'R'], ['수량', 'R'], ['금액', 'R'], ['설명', 'L'],
+                    ] as [string, 'L' | 'R'][]).map(([h, a]) => (
+                      <th key={h} style={a === 'R' ? S.thR : S.th}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {status.todayOrders.buyOrders.map((order, i) => (
+                    <tr key={i}>
+                      <td style={{ ...S.td, fontWeight: 600 }}>{order.type}</td>
+                      <td style={{ ...S.tdR, backgroundColor: highlightBg, color: '#1565C0', fontWeight: 700 }}>
+                        {fmtUSD(order.price)}
+                      </td>
+                      <td style={{ ...S.tdR, backgroundColor: highlightBg, color: '#1565C0', fontWeight: 700 }}>
+                        {order.shares}주
+                      </td>
+                      <td style={S.tdR}>{fmtUSD(Math.round(order.price * order.shares * 100) / 100)}</td>
+                      <td style={{ ...S.td, color: '#888', fontSize: 10 }}>{order.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 예약 매도 */}
+            {status.todayOrders.sellOrder && (
+              <>
+                <div style={S.section}>예약 매도</div>
+                <div style={S.card}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        {([
+                          ['구분', 'L'], ['목표가', 'R'], ['수량', 'R'], ['예상금액', 'R'], ['설명', 'L'],
+                        ] as [string, 'L' | 'R'][]).map(([h, a]) => (
+                          <th key={h} style={a === 'R' ? S.thR : S.th}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style={{ ...S.td, fontWeight: 600 }}>{status.todayOrders.sellOrder.type}</td>
+                        <td style={{ ...S.tdR, backgroundColor: '#c6efce', color: '#006100', fontWeight: 700 }}>
+                          {fmtUSD(status.todayOrders.sellOrder.price)}
+                        </td>
+                        <td style={{ ...S.tdR, backgroundColor: '#c6efce', color: '#006100', fontWeight: 700 }}>
+                          {status.todayOrders.sellOrder.shares}주
+                        </td>
+                        <td style={S.tdR}>{fmtUSD(Math.round(status.todayOrders.sellOrder.price * status.todayOrders.sellOrder.shares * 100) / 100)}</td>
+                        <td style={{ ...S.td, color: '#888', fontSize: 10 }}>{status.todayOrders.sellOrder.desc}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            {/* 액션 요약 — Excel 콜아웃 셀 */}
+            <div style={S.card}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ ...S.td, backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 12, padding: '8px 10px' }}>
+                      → 한투앱에서 {status.todayOrders.buyOrders.map(o => `${o.type} ${fmtUSD(o.price)} × ${o.shares}주`).join(' + ')} 매수
+                      {status.todayOrders.sellOrder ? ` + 예약매도 ${fmtUSD(status.todayOrders.sellOrder.price)} × ${status.todayOrders.sellOrder.shares}주` : ''} 설정
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </>
+        );
+      })()}
 
       {/* ── idle 상태: 안내 ── */}
       {mode === 'idle' && !loading && (
@@ -426,7 +509,7 @@ export default function InfiniteBuyPage() {
         </>
       )}
 
-      {/* ── 현황 화면 (사이클 진행 중) ── */}
+      {/* ── 사이클 현황 ── */}
       {mode === 'status' && status && (
         <>
           <div style={S.section}>
@@ -453,79 +536,44 @@ export default function InfiniteBuyPage() {
               </tbody>
             </table>
           </div>
+        </>
+      )}
 
-          {/* 오늘의 주문 */}
-          <div style={S.section}>
-            오늘의 주문 — 현재가 {fmtUSD(status.balance.currentPrice)} {status.balance.quantity > 0 ? (status.balance.currentPrice > status.balance.avgPrice ? '> ' : '< ') + '평단가 ' + fmtUSD(status.balance.avgPrice) : ''}
-          </div>
-
-          <div style={{ margin: '0 0 4px', fontSize: 11, color: '#555', padding: '4px 0' }}>
-            판단: {status.todayOrders.condition}
-          </div>
-
-          {/* 매수 주문 */}
-          <div style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#333' }}>매수 주문:</div>
+      {/* ── 원금 대비 누적 수익 요약 ── */}
+      {totalExKRW > 0 && (
+        <>
+          <div style={S.section}>원금 대비 누적 수익</div>
           <div style={S.card}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  {([
-                    ['구분', 'L'], ['주문가', 'R'], ['수량', 'R'], ['금액', 'R'], ['설명', 'L'],
-                  ] as [string, 'L' | 'R'][]).map(([h, a]) => (
-                    <th key={h} style={a === 'R' ? S.thR : S.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
               <tbody>
-                {status.todayOrders.buyOrders.map((order, i) => (
-                  <tr key={i}>
-                    <td style={{ ...S.td, fontWeight: 600 }}>
-                      <span style={{ padding: '1px 6px', borderRadius: 3, backgroundColor: '#c6efce', color: '#006100', fontSize: 10 }}>{order.type}</span>
-                    </td>
-                    <td style={S.tdR}>{fmtUSD(order.price)}</td>
-                    <td style={S.tdR}>{order.shares}주</td>
-                    <td style={S.tdR}>{fmtUSD(Math.round(order.price * order.shares * 100) / 100)}</td>
-                    <td style={{ ...S.td, color: '#888', fontSize: 10 }}>{order.desc}</td>
-                  </tr>
-                ))}
+                <tr>
+                  <td style={{ ...S.td, color: '#666', width: '20%' }}>투입 원금</td>
+                  <td style={{ ...S.tdR, width: '30%' }}>{fmtKRW(totalExKRW)} ≈ {fmtUSD(totalExUSD)}</td>
+                  <td style={{ ...S.td, color: '#666', width: '20%' }}>환율</td>
+                  <td style={{ ...S.tdR, width: '30%' }}>{exchangeRate.toLocaleString()}원/$</td>
+                </tr>
+                <tr>
+                  <td style={{ ...S.td, color: '#666' }}>실현 수익</td>
+                  <td style={{ ...S.tdR, color: realizedUSD >= 0 ? '#006100' : '#9c0006' }}>
+                    {realizedUSD >= 0 ? '+' : ''}{fmtUSD(realizedUSD)}
+                  </td>
+                  <td style={{ ...S.td, color: '#666' }}>미실현 수익</td>
+                  <td style={{ ...S.tdR, color: unrealizedUSD >= 0 ? '#006100' : '#9c0006' }}>
+                    {unrealizedUSD >= 0 ? '+' : ''}{fmtUSD(unrealizedUSD)}
+                  </td>
+                </tr>
+                <tr style={{ backgroundColor: '#f5f5f5' }}>
+                  <td style={{ ...S.td, color: '#666', fontWeight: 600 }}>누적 수익</td>
+                  <td style={{ ...S.tdR, color: totalProfitUSD >= 0 ? '#006100' : '#9c0006', fontWeight: 600 }}>
+                    {totalProfitUSD >= 0 ? '+' : ''}{fmtUSD(totalProfitUSD)} ≈ {totalProfitKRW >= 0 ? '+' : ''}{totalProfitKRW.toLocaleString()}원
+                  </td>
+                  <td style={{ ...S.td, color: '#666', fontWeight: 600 }}>원금 대비</td>
+                  <td style={{ ...S.tdR, color: profitPct >= 0 ? '#006100' : '#9c0006', fontWeight: 700, fontSize: 13 }}>
+                    {fmtPct(profitPct)}
+                  </td>
+                </tr>
               </tbody>
             </table>
-          </div>
-
-          {/* 매도 주문 */}
-          {status.todayOrders.sellOrder && (
-            <>
-              <div style={{ margin: '8px 0 4px', fontSize: 11, fontWeight: 600, color: '#333' }}>예약 매도 주문:</div>
-              <div style={S.card}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      {([
-                        ['구분', 'L'], ['목표가', 'R'], ['수량', 'R'], ['예상금액', 'R'], ['설명', 'L'],
-                      ] as [string, 'L' | 'R'][]).map(([h, a]) => (
-                        <th key={h} style={a === 'R' ? S.thR : S.th}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style={{ ...S.td, fontWeight: 600 }}>
-                        <span style={{ padding: '1px 6px', borderRadius: 3, backgroundColor: '#006100', color: '#fff', fontSize: 10 }}>{status.todayOrders.sellOrder.type}</span>
-                      </td>
-                      <td style={S.tdR}>{fmtUSD(status.todayOrders.sellOrder.price)}</td>
-                      <td style={S.tdR}>{status.todayOrders.sellOrder.shares}주</td>
-                      <td style={S.tdR}>{fmtUSD(Math.round(status.todayOrders.sellOrder.price * status.todayOrders.sellOrder.shares * 100) / 100)}</td>
-                      <td style={{ ...S.td, color: '#888', fontSize: 10 }}>{status.todayOrders.sellOrder.desc}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          {/* 참고 */}
-          <div style={{ margin: '8px 0 16px', padding: '8px 12px', backgroundColor: '#F5F5F5', borderRadius: 4, fontSize: 10, color: '#888', lineHeight: 1.6 }}>
-            참고: 현재가 &lt; 평단가인 경우 → 1회분 전량: 현재가 LOC. 1칸/현재가=N주 매수.
           </div>
         </>
       )}
