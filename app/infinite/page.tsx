@@ -42,6 +42,7 @@ interface StatusResult {
   balance: {
     avgPrice: number; quantity: number; investedUSD: number;
     currentPrice: number; evalUSD: number; profitUSD: number; profitRate: number;
+    availableUSD: number; maxBuyShares: number;
   };
   todayOrders: {
     condition: string;
@@ -53,8 +54,8 @@ interface StatusResult {
 
 /* ── 스타일 ── */
 const S = {
-  th: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '2px solid #217346', borderRight: '1px solid #e0e0e0', textAlign: 'left' as const, whiteSpace: 'nowrap' as const },
-  thR: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '2px solid #217346', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, whiteSpace: 'nowrap' as const },
+  th: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'left' as const, whiteSpace: 'nowrap' as const },
+  thR: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, whiteSpace: 'nowrap' as const },
   td: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0' },
   tdR: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, fontFamily: 'monospace' },
   section: { margin: '12px 0 0', backgroundColor: '#d9e2f3', border: '1px solid #b4c6e7', padding: '5px 8px', fontWeight: 700 as const, color: '#1f3864', fontSize: 11 },
@@ -447,19 +448,6 @@ export default function InfiniteBuyPage() {
               </>
             )}
 
-            {/* 액션 요약 — Excel 콜아웃 셀 */}
-            <div style={S.card}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <tbody>
-                  <tr>
-                    <td style={{ ...S.td, backgroundColor: '#ffc7ce', color: '#9c0006', fontWeight: 700, fontSize: 12, padding: '8px 10px' }}>
-                      → 한투앱에서 {status.todayOrders.buyOrders.map(o => `${o.type} ${fmtUSD(o.price)} × ${o.shares}주`).join(' + ')} 매수
-                      {status.todayOrders.sellOrder ? ` + 예약매도 ${fmtUSD(status.todayOrders.sellOrder.price)} × ${status.todayOrders.sellOrder.shares}주` : ''} 설정
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
           </>
         );
       })()}
@@ -525,6 +513,7 @@ export default function InfiniteBuyPage() {
                   ['투자금', fmtUSD(status.balance.investedUSD), '평가금액', fmtUSD(status.balance.evalUSD)],
                   ['평가손익', `${status.balance.profitUSD >= 0 ? '+' : ''}${fmtUSD(status.balance.profitUSD)}`, '원화 환산', `≈ ${(status.balance.profitUSD * status.exchangeRate >= 0 ? '+' : '')}${Math.round(status.balance.profitUSD * status.exchangeRate).toLocaleString()}원 @${status.exchangeRate}`],
                   ['1칸 금액', fmtUSD(status.cycle.slotAmountUSD), '잔여 슬롯', `${status.cycle.totalSlots - status.cycle.usedSlots}칸`],
+                  ['예수금', fmtUSD(status.balance.availableUSD), '매수 가능', `${status.balance.maxBuyShares}주 (@${fmtUSD(status.balance.currentPrice)})`],
                 ].map(([l1, v1, l2, v2], i) => (
                   <tr key={i}>
                     <td style={{ ...S.td, color: '#666', width: '20%' }}>{l1}</td>

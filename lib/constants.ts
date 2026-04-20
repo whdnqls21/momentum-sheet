@@ -102,4 +102,5 @@ export const KIS_TR_IDS = {
   OS_PRICE_DETAIL: 'HHDFS76200200',  // 해외주식 현재가상세
   OS_BALANCE: 'TTTS3012R',           // 해외주식 잔고
   OS_DAILY_PRICE: 'HHDFS76240000',   // 해외주식 기간별시세
+  OS_BUYABLE: 'TTTS3007R',           // 해외주식 매수가능금액
 } as const;

@@ -6,8 +6,8 @@ import type { InfiniteBuyCycle, InfiniteBuyJournal } from '@/lib/types';
 
 /* ── 스타일 ── */
 const S = {
-  th: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '2px solid #217346', borderRight: '1px solid #e0e0e0', textAlign: 'left' as const, whiteSpace: 'nowrap' as const },
-  thR: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '2px solid #217346', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, whiteSpace: 'nowrap' as const },
+  th: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'left' as const, whiteSpace: 'nowrap' as const },
+  thR: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, whiteSpace: 'nowrap' as const },
   td: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0' },
   tdR: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, fontFamily: 'monospace' },
   section: { margin: '12px 0 0', backgroundColor: '#d9e2f3', border: '1px solid #b4c6e7', padding: '5px 8px', fontWeight: 700 as const, color: '#1f3864', fontSize: 11 },
@@ -444,8 +444,8 @@ export default function InfiniteJournalPage() {
 
 function renderJournalTable(items: InfiniteBuyJournal[]) {
   const S2 = {
-    th: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '2px solid #217346', borderRight: '1px solid #e0e0e0', textAlign: 'left' as const, whiteSpace: 'nowrap' as const },
-    thR: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '2px solid #217346', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, whiteSpace: 'nowrap' as const },
+    th: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'left' as const, whiteSpace: 'nowrap' as const },
+    thR: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, whiteSpace: 'nowrap' as const },
     td: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0' },
     tdR: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, fontFamily: 'monospace' },
   };

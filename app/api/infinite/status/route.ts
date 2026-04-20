@@ -65,6 +65,23 @@ export async function GET() {
 
     const slotAmountUSD = cycle.slot_amount_usd || 0;
 
+    // 매수가능금액 조회
+    await sleep(100);
+    const psRes = await kisGet(
+      '/uapi/overseas-stock/v1/trading/inquire-psamount',
+      KIS_TR_IDS.OS_BUYABLE,
+      {
+        CANO: process.env.KIS_CANO!,
+        ACNT_PRDT_CD: process.env.KIS_ACNT_PRDT_CD || '01',
+        OVRS_EXCG_CD: 'NASD',
+        ITEM_CD: cycle.ticker,
+        OVRS_ORD_UNPR: currentPrice.toString(),
+      },
+    );
+
+    const availableUSD = parseFloat(psRes.output?.ord_psbl_frcr_amt) || 0;
+    const maxBuyShares = parseInt(psRes.output?.max_ord_psbl_qty) || 0;
+
     // 오늘의 주문 계산
     type OrderItem = { type: string; price: number; shares: number; desc: string };
     let buyOrders: OrderItem[] = [];
@@ -133,6 +150,8 @@ export async function GET() {
         evalUSD,
         profitUSD,
         profitRate,
+        availableUSD,
+        maxBuyShares,
       },
       todayOrders: {
         condition,
