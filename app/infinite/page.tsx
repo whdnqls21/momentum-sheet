@@ -72,7 +72,7 @@ export default function InfiniteBuyPage() {
   const [status, setStatus] = useState<StatusResult | null>(null);
   const [cycles, setCycles] = useState<InfiniteBuyCycle[]>([]);
   const [exchanges, setExchanges] = useState<InfiniteBuyJournal[]>([]);
-  const [mode, setMode] = useState<'loading' | 'recommend' | 'status' | 'idle'>('idle');
+  const [mode, setMode] = useState<'loading' | 'recommend' | 'status' | 'change' | 'idle'>('idle');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -163,6 +163,44 @@ export default function InfiniteBuyPage() {
       setLoading(false);
     }
   }, [recommend, fetchStatus]);
+
+  // 종목 변경 모드 진입 (매수 전 한정)
+  const openChangeTicker = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await fetch('/api/infinite/recommend', { cache: 'no-store' });
+      if (!r.ok) throw new Error('추천 조회 실패');
+      const data = await r.json();
+      setRecommend(data);
+      setMode('change');
+    } catch (e: unknown) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 종목 변경 실행
+  const changeTicker = useCallback(async (ticker: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await fetch('/api/infinite/cycle/change-ticker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || '종목 변경 실패');
+      }
+      await fetchStatus();
+    } catch (e: unknown) {
+      setError((e as Error).message);
+      setLoading(false);
+    }
+  }, [fetchStatus]);
 
   // 사이클 완료
   const completeCycle = useCallback(async () => {
@@ -265,6 +303,16 @@ export default function InfiniteBuyPage() {
           <button className="btn-ribbon" onClick={() => setRulesOpen(true)}>
             전략 규칙
           </button>
+          {mode === 'status' && status && status.cycle.usedSlots === 0 && status.balance.quantity === 0 && (
+            <button className="btn-ribbon" onClick={openChangeTicker} disabled={loading}>
+              종목 변경
+            </button>
+          )}
+          {mode === 'change' && (
+            <button className="btn-ribbon" onClick={fetchStatus} disabled={loading}>
+              ← 취소
+            </button>
+          )}
           {mode === 'status' && status && (
             <button className="btn-ribbon" onClick={() => setCompleteOpen(true)}>
               사이클 완료
@@ -494,6 +542,34 @@ export default function InfiniteBuyPage() {
               두 종목 모두 1칸 매수 불가 — 투자금 증액 또는 가격 하락 대기
             </div>
           )}
+        </>
+      )}
+
+      {/* ── 종목 변경 화면 (매수 전 한정) ── */}
+      {mode === 'change' && recommend && status && (
+        <>
+          <div style={{ margin: '12px 0 0', padding: '8px 12px', backgroundColor: '#FFF3E0', borderRadius: 4, fontSize: 11, color: '#E65100' }}>
+            사이클 #{status.cycle.cycleNum} — 매수 전이라 종목 변경 가능. 현재: <b>{status.cycle.ticker}</b>
+          </div>
+
+          <div style={S.section}>종목 변경 — TQQQ vs SOXL</div>
+          <div style={{ ...S.card, display: 'flex', gap: 12, padding: 12, flexWrap: 'wrap' }}>
+            {renderStockCard(recommend.tqqq, recommend.recommendation?.ticker === 'TQQQ')}
+            {renderStockCard(recommend.soxl, recommend.recommendation?.ticker === 'SOXL')}
+          </div>
+
+          <div style={{ margin: '0 0 12px', padding: '10px 12px', backgroundColor: '#f5f5f5', borderRadius: 4, fontSize: 11, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {(['TQQQ', 'SOXL'] as const).filter(t => t !== status.cycle.ticker).map(t => (
+              <button
+                key={t}
+                onClick={() => changeTicker(t)}
+                disabled={loading}
+                style={{ padding: '6px 16px', fontSize: 11, fontWeight: 600, border: 'none', borderRadius: 3, cursor: loading ? 'not-allowed' : 'pointer', backgroundColor: '#217346', color: '#fff' }}
+              >
+                {t}로 변경
+              </button>
+            ))}
+          </div>
         </>
       )}
 

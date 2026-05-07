@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { kisGet } from '@/lib/kis-api';
 import { supabase } from '@/lib/supabase';
-import { KIS_TR_IDS, INFINITE_BUY_PARAMS } from '@/lib/constants';
+import { KIS_TR_IDS, INFINITE_BUY_PARAMS, INFINITE_BUY_STOCKS } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,11 +23,15 @@ export async function GET() {
       return NextResponse.json({ cycle: null, balance: null, todayOrders: null });
     }
 
+    const stock = INFINITE_BUY_STOCKS.find(s => s.ticker === cycle.ticker);
+    if (!stock) throw new Error(`알 수 없는 종목: ${cycle.ticker}`);
+    const tradeExcd = stock.tradeExcd;
+
     // 현재가 상세 (환율 포함)
     const detail = await kisGet(
       '/uapi/overseas-price/v1/quotations/price-detail',
       KIS_TR_IDS.OS_PRICE_DETAIL,
-      { AUTH: '', EXCD: 'NAS', SYMB: cycle.ticker },
+      { AUTH: '', EXCD: stock.excd, SYMB: cycle.ticker },
     );
     await sleep(100);
 
@@ -41,7 +45,7 @@ export async function GET() {
       {
         CANO: process.env.KIS_CANO!,
         ACNT_PRDT_CD: process.env.KIS_ACNT_PRDT_CD || '01',
-        OVRS_EXCG_CD: 'NASD',
+        OVRS_EXCG_CD: tradeExcd,
         TR_CRCY_CD: 'USD',
         CTX_AREA_FK200: '',
         CTX_AREA_NK200: '',
@@ -73,7 +77,7 @@ export async function GET() {
       {
         CANO: process.env.KIS_CANO!,
         ACNT_PRDT_CD: process.env.KIS_ACNT_PRDT_CD || '01',
-        OVRS_EXCG_CD: 'NASD',
+        OVRS_EXCG_CD: tradeExcd,
         ITEM_CD: cycle.ticker,
         OVRS_ORD_UNPR: currentPrice.toString(),
       },

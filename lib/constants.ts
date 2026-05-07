@@ -76,8 +76,8 @@ export const TRADING_RULES = {
 
 // ── 무한매수법 종목 ──
 export const INFINITE_BUY_STOCKS = [
-  { ticker: 'TQQQ', name: 'ProShares UltraPro QQQ', excd: 'NAS' },
-  { ticker: 'SOXL', name: 'Direxion Daily Semiconductor Bull 3X', excd: 'NAS' },
+  { ticker: 'TQQQ', name: 'ProShares UltraPro QQQ', excd: 'NAS', tradeExcd: 'NASD' },
+  { ticker: 'SOXL', name: 'Direxion Daily Semiconductor Bull 3X', excd: 'AMS', tradeExcd: 'AMEX' },
 ] as const;
 
 export const INFINITE_BUY_PARAMS = {
