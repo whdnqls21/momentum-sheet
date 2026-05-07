@@ -384,8 +384,8 @@ export default function InfiniteJournalPage() {
             <thead>
               <tr>
                 {([
-                  ['사이클', 'L'], ['종목', 'L'], ['기간', 'L'],
-                  ['슬롯', 'R'], ['투자($)', 'R'], ['수익($)', 'R'], ['수익률', 'R'], ['수익(원)', 'R'],
+                  ['사이클', 'L'], ['슬롯', 'R'], ['종목', 'L'], ['기간', 'L'],
+                  ['투자($)', 'R'], ['수익($)', 'R'], ['수익률', 'R'], ['수익(원)', 'R'],
                 ] as [string, 'L' | 'R'][]).map(([h, a]) => (
                   <th key={h} style={a === 'R' ? S.thR : S.th}>{h}</th>
                 ))}
@@ -395,9 +395,9 @@ export default function InfiniteJournalPage() {
               {cycleSummaries.map(c => (
                 <tr key={c.cycle_num} style={{ backgroundColor: c.status === 'active' ? '#f0fff0' : undefined }}>
                   <td style={S.td}>#{c.cycle_num}</td>
+                  <td style={S.tdR}>{c.used_slots}/{c.total_slots}</td>
                   <td style={S.td}>{c.ticker}</td>
                   <td style={S.td}>{fmtDate(c.start_date)}~{c.end_date ? fmtDate(c.end_date) : '진행중'}</td>
-                  <td style={S.tdR}>{c.used_slots}/{c.total_slots}</td>
                   <td style={S.tdR}>{fmtUSD(c.totalInvested)}</td>
                   <td style={{ ...S.tdR, color: c.profit >= 0 ? '#006100' : '#9c0006' }}>
                     {c.profit >= 0 ? '+' : ''}{fmtUSD(c.profit)}
@@ -459,8 +459,8 @@ function renderJournalTable(items: InfiniteBuyJournal[]) {
           <thead>
             <tr>
               {([
-                ['사이클', 'L'], ['일자', 'L'], ['유형', 'L'],
-                ['단가', 'R'], ['수량', 'R'], ['금액($)', 'R'], ['슬롯', 'R'],
+                ['사이클', 'L'], ['슬롯', 'R'], ['일자', 'L'], ['유형', 'L'],
+                ['단가', 'R'], ['수량', 'R'], ['금액($)', 'R'],
                 ['메모', 'L'],
               ] as [string, 'L' | 'R'][]).map(([h, a]) => (
                 <th key={h} style={a === 'R' ? S2.thR : S2.th}>{h}</th>
@@ -471,6 +471,7 @@ function renderJournalTable(items: InfiniteBuyJournal[]) {
             {items.map(j => (
               <tr key={j.id} style={{ backgroundColor: ROW_BG[j.record_type] || undefined }}>
                 <td style={S2.td}>#{j.cycle_num}</td>
+                <td style={S2.tdR}>{j.slot_num ?? '-'}</td>
                 <td style={S2.td}>{fmtDate2(j.trade_date)}</td>
                 <td style={S2.td}>
                   <span style={{
@@ -484,7 +485,6 @@ function renderJournalTable(items: InfiniteBuyJournal[]) {
                 <td style={S2.tdR}>{j.price ? fmtUSD2(j.price) : '-'}</td>
                 <td style={S2.tdR}>{j.quantity ?? '-'}</td>
                 <td style={S2.tdR}>{j.amount_usd ? fmtUSD2(j.amount_usd) : '-'}</td>
-                <td style={S2.tdR}>{j.slot_num ?? '-'}</td>
                 <td style={{ ...S2.td, color: '#888', fontSize: 10 }}>{j.notes || ''}</td>
               </tr>
             ))}
