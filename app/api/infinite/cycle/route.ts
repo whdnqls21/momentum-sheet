@@ -99,26 +99,39 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { cycle_num, total_sell_usd, profit_usd, profit_rate } = body;
+    const { cycle_num } = body;
 
     if (!cycle_num) {
       return NextResponse.json({ error: 'cycle_num 필수' }, { status: 400 });
     }
 
-    // 매도 기록 존재 확인
-    const { count: sellCount, error: sellErr } = await supabase
+    // 매매일지에서 buy/sell 집계 (실제 거래 기록을 진실의 원천으로 사용)
+    const { data: trades, error: tradesErr } = await supabase
       .from('infinite_buy_journal')
-      .select('id', { count: 'exact', head: true })
+      .select('record_type, amount_usd')
       .eq('cycle_num', cycle_num)
-      .eq('record_type', 'sell');
+      .in('record_type', ['buy', 'sell']);
 
-    if (sellErr) throw new Error(sellErr.message);
-    if (!sellCount || sellCount === 0) {
+    if (tradesErr) throw new Error(tradesErr.message);
+
+    const totalBuy = (trades || [])
+      .filter(t => t.record_type === 'buy')
+      .reduce((s, t) => s + Number(t.amount_usd || 0), 0);
+    const totalSell = (trades || [])
+      .filter(t => t.record_type === 'sell')
+      .reduce((s, t) => s + Number(t.amount_usd || 0), 0);
+
+    if (totalSell === 0) {
       return NextResponse.json(
         { error: '매도 기록이 없습니다. 매도를 먼저 입력하세요.' },
         { status: 400 }
       );
     }
+
+    const profitUsd = Math.round((totalSell - totalBuy) * 100) / 100;
+    const profitRate = totalBuy > 0
+      ? Math.round((profitUsd / totalBuy) * 10000) / 100
+      : 0;
 
     const today = new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })
       .replace(/\. /g, '-').replace('.', '').replace(/(\d+)-(\d+)-(\d+)/, (_, y, m, d) =>
@@ -129,9 +142,10 @@ export async function PATCH(request: Request) {
       .update({
         status: 'completed',
         end_date: today,
-        total_sell_usd: total_sell_usd || null,
-        profit_usd: profit_usd || null,
-        profit_rate: profit_rate || null,
+        total_invested_usd: Math.round(totalBuy * 100) / 100,
+        total_sell_usd: Math.round(totalSell * 100) / 100,
+        profit_usd: profitUsd,
+        profit_rate: profitRate,
       })
       .eq('cycle_num', cycle_num)
       .select()
@@ -139,7 +153,7 @@ export async function PATCH(request: Request) {
 
     if (error) throw new Error(error.message);
 
-    console.log(`[Infinite Cycle] 사이클 #${cycle_num} 완료`);
+    console.log(`[Infinite Cycle] 사이클 #${cycle_num} 완료 (손익 $${profitUsd}, ${profitRate}%)`);
     return NextResponse.json(data);
   } catch (err: unknown) {
     console.error('[Infinite Cycle PATCH] 에러:', (err as Error).message);

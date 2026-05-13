@@ -210,12 +210,7 @@ export default function InfiniteBuyPage() {
       const r = await fetch('/api/infinite/cycle', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cycle_num: status.cycle.cycleNum,
-          total_sell_usd: status.balance.evalUSD,
-          profit_usd: status.balance.profitUSD,
-          profit_rate: status.balance.profitRate,
-        }),
+        body: JSON.stringify({ cycle_num: status.cycle.cycleNum }),
       });
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));
