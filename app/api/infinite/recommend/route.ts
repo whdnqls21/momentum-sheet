@@ -109,19 +109,19 @@ export async function GET() {
       };
     }
 
-    // 추천 결정: buyable인 종목 중 점수 높은 쪽
+    // 추천 결정: 점수 높은 쪽 (1칸 매수 불가여도 사이클 시작은 허용)
     const candidates = Object.values(results) as Array<{
       ticker: string; score: number; buyable: boolean;
       dropFromHigh: number; rsi14: number | null;
     }>;
-    const buyableCandidates = candidates.filter(c => c.buyable);
 
     let recommendation: { ticker: string; reason: string } | null = null;
-    if (buyableCandidates.length > 0) {
-      const best = buyableCandidates.sort((a, b) => b.score - a.score)[0];
+    if (candidates.length > 0) {
+      const best = [...candidates].sort((a, b) => b.score - a.score)[0];
+      const buyNote = best.buyable ? '1칸 매수 가능' : '1칸 매수 불가 (가격 하락 또는 증액 대기)';
       recommendation = {
         ticker: best.ticker,
-        reason: `52주 고점 대비 ${best.dropFromHigh > 0 ? '+' : ''}${best.dropFromHigh}%, RSI ${best.rsi14 ?? 'N/A'}, 1칸 매수 가능`,
+        reason: `52주 고점 대비 ${best.dropFromHigh > 0 ? '+' : ''}${best.dropFromHigh}%, RSI ${best.rsi14 ?? 'N/A'}, ${buyNote}`,
       };
     }
 

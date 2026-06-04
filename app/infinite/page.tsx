@@ -246,20 +246,15 @@ export default function InfiniteBuyPage() {
   const profitPct = totalExKRW > 0 ? (totalProfitKRW / totalExKRW) * 100 : 0;
 
   /* ── 추천 카드 렌더링 ── */
-  const renderStockCard = (stock: StockInfo, isRecommended: boolean) => (
+  const renderStockCard = (stock: StockInfo) => (
     <div style={{
       flex: 1, padding: 12, borderRadius: 4,
-      border: isRecommended ? '2px solid #217346' : '1px solid #d4d4d4',
-      backgroundColor: isRecommended ? '#FFFDE7' : '#fafafa',
-      opacity: isRecommended ? 1 : 0.65,
+      border: '1px solid #d4d4d4',
+      backgroundColor: '#fafafa',
       minWidth: 140,
     }}>
-      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
         {stock.ticker}
-        {isRecommended
-          ? <span style={{ fontSize: 10, color: '#217346', fontWeight: 600 }}>추천</span>
-          : <span style={{ fontSize: 10, color: '#999' }}>비추</span>
-        }
       </div>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
         <tbody>
@@ -513,30 +508,30 @@ export default function InfiniteBuyPage() {
             <span>1칸: <b>{fmtUSD(recommend.params.slotAmountUSD)}</b></span>
           </div>
 
-          <div style={S.section}>사이클 시작 추천 — TQQQ vs SOXL</div>
+          <div style={S.section}>사이클 시작 — TQQQ vs SOXL</div>
           <div style={{ ...S.card, display: 'flex', gap: 12, padding: 12, flexWrap: 'wrap' }}>
-            {renderStockCard(recommend.tqqq, recommend.recommendation?.ticker === 'TQQQ')}
-            {renderStockCard(recommend.soxl, recommend.recommendation?.ticker === 'SOXL')}
+            {renderStockCard(recommend.tqqq)}
+            {renderStockCard(recommend.soxl)}
           </div>
 
-          {recommend.recommendation && (
-            <div style={{ margin: '0 0 12px', padding: '10px 12px', backgroundColor: '#E8F5E9', borderRadius: 4, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-              <span>{recommend.recommendation.ticker} 추천 — {recommend.recommendation.reason}</span>
-              <button
-                onClick={() => startCycle(recommend.recommendation!.ticker)}
-                disabled={loading}
-                style={{ padding: '6px 16px', fontSize: 11, fontWeight: 600, border: 'none', borderRadius: 3, cursor: 'pointer', backgroundColor: '#217346', color: '#fff' }}
-              >
-                {recommend.recommendation.ticker}로 사이클 시작
-              </button>
+          {!(recommend.tqqq.buyable || recommend.soxl.buyable) && (
+            <div style={{ margin: '0 0 8px', padding: '10px 12px', backgroundColor: '#FFF3E0', borderRadius: 4, fontSize: 11, color: '#E65100' }}>
+              두 종목 모두 1칸 매수 불가 — 가격 하락 또는 투자금 증액 권장. 사이클은 시작할 수 있습니다.
             </div>
           )}
 
-          {!recommend.recommendation && (
-            <div style={{ margin: '0 0 12px', padding: '10px 12px', backgroundColor: '#FFF3E0', borderRadius: 4, fontSize: 11, color: '#E65100' }}>
-              두 종목 모두 1칸 매수 불가 — 투자금 증액 또는 가격 하락 대기
-            </div>
-          )}
+          <div style={{ margin: '0 0 12px', padding: '10px 12px', backgroundColor: '#f5f5f5', borderRadius: 4, fontSize: 11, display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            {(['TQQQ', 'SOXL'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => startCycle(t)}
+                disabled={loading}
+                style={{ padding: '6px 16px', fontSize: 11, fontWeight: 600, border: 'none', borderRadius: 3, cursor: loading ? 'not-allowed' : 'pointer', backgroundColor: '#217346', color: '#fff' }}
+              >
+                {t}로 사이클 시작
+              </button>
+            ))}
+          </div>
         </>
       )}
 
@@ -549,8 +544,8 @@ export default function InfiniteBuyPage() {
 
           <div style={S.section}>종목 변경 — TQQQ vs SOXL</div>
           <div style={{ ...S.card, display: 'flex', gap: 12, padding: 12, flexWrap: 'wrap' }}>
-            {renderStockCard(recommend.tqqq, recommend.recommendation?.ticker === 'TQQQ')}
-            {renderStockCard(recommend.soxl, recommend.recommendation?.ticker === 'SOXL')}
+            {renderStockCard(recommend.tqqq)}
+            {renderStockCard(recommend.soxl)}
           </div>
 
           <div style={{ margin: '0 0 12px', padding: '10px 12px', backgroundColor: '#f5f5f5', borderRadius: 4, fontSize: 11, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>

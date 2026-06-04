@@ -35,9 +35,15 @@ const ROW_BG: Record<string, string> = {
   exchange: '#E3F2FD',
 };
 
+interface ActiveStatus {
+  cycleNum: number;
+  currentPrice: number;
+}
+
 export default function InfiniteJournalPage() {
   const [cycles, setCycles] = useState<InfiniteBuyCycle[]>([]);
   const [journal, setJournal] = useState<InfiniteBuyJournal[]>([]);
+  const [activeStatus, setActiveStatus] = useState<ActiveStatus | null>(null);
   const [selectedCycle, setSelectedCycle] = useState<string>('active'); // 'all', 'active', or cycle_num
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +76,21 @@ export default function InfiniteJournalPage() {
       if (!jr.ok) throw new Error('일지 조회 실패');
       const jData = await jr.json();
       setJournal(jData || []);
+
+      // 진행중 사이클 현재가 + 환율
+      const sr = await fetch('/api/infinite/status', { cache: 'no-store' });
+      if (sr.ok) {
+        const sData = await sr.json();
+        if (sData?.cycle && sData?.balance) {
+          setActiveStatus({
+            cycleNum: sData.cycle.cycleNum,
+            currentPrice: sData.balance.currentPrice || 0,
+          });
+          if (sData.exchangeRate) setExchangeRate(sData.exchangeRate);
+        } else {
+          setActiveStatus(null);
+        }
+      }
     } catch (e: unknown) {
       setError((e as Error).message);
     } finally {
@@ -191,12 +212,24 @@ export default function InfiniteJournalPage() {
     const sells = cycleJournal.filter(j => j.record_type === 'sell');
     const totalInvested = buys.reduce((sum, j) => sum + (j.amount_usd || 0), 0);
     const totalSold = sells.reduce((sum, j) => sum + (j.amount_usd || 0), 0);
+    const buyShares = buys.reduce((sum, j) => sum + (j.quantity || 0), 0);
+    const sellShares = sells.reduce((sum, j) => sum + (j.quantity || 0), 0);
+    const heldShares = buyShares - sellShares;
+
+    const isActive = c.status === 'active' && activeStatus?.cycleNum === c.cycle_num;
+    const currentPrice = isActive ? activeStatus!.currentPrice : 0;
 
     let profit = 0;
     let profitRate = 0;
+    let unrealized = false;
     if (c.status === 'completed' && totalInvested > 0) {
       profit = totalSold - totalInvested;
       profitRate = (profit / totalInvested) * 100;
+    } else if (isActive && totalInvested > 0 && currentPrice > 0) {
+      // 매매일지 기반 미실현 손익: 매도금액 + 보유주수×현재가 - 매수금액
+      profit = totalSold + heldShares * currentPrice - totalInvested;
+      profitRate = (profit / totalInvested) * 100;
+      unrealized = true;
     } else if (c.profit_usd != null) {
       profit = c.profit_usd;
       profitRate = c.profit_rate || 0;
@@ -206,8 +239,11 @@ export default function InfiniteJournalPage() {
       ...c,
       totalInvested,
       totalSold,
+      heldShares,
+      currentPrice,
       profit,
       profitRate,
+      unrealized,
       profitKRW: Math.round(profit * exchangeRate),
     };
   });
@@ -385,7 +421,7 @@ export default function InfiniteJournalPage() {
               <tr>
                 {([
                   ['사이클', 'L'], ['슬롯', 'R'], ['종목', 'L'], ['기간', 'L'],
-                  ['투자($)', 'R'], ['수익($)', 'R'], ['수익률', 'R'], ['수익(원)', 'R'],
+                  ['현재가', 'R'], ['투자($)', 'R'], ['수익($)', 'R'], ['수익률', 'R'], ['수익(원)', 'R'],
                 ] as [string, 'L' | 'R'][]).map(([h, a]) => (
                   <th key={h} style={a === 'R' ? S.thR : S.th}>{h}</th>
                 ))}
@@ -394,10 +430,16 @@ export default function InfiniteJournalPage() {
             <tbody>
               {cycleSummaries.map(c => (
                 <tr key={c.cycle_num} style={{ backgroundColor: c.status === 'active' ? '#f0fff0' : undefined }}>
-                  <td style={S.td}>#{c.cycle_num}</td>
+                  <td style={S.td}>
+                    #{c.cycle_num}
+                    {c.unrealized && (
+                      <span style={{ marginLeft: 4, fontSize: 9, color: '#1565C0', fontWeight: 600 }}>평가</span>
+                    )}
+                  </td>
                   <td style={S.tdR}>{c.used_slots}/{c.total_slots}</td>
                   <td style={S.td}>{c.ticker}</td>
                   <td style={S.td}>{fmtDate(c.start_date)}~{c.end_date ? fmtDate(c.end_date) : '진행중'}</td>
+                  <td style={S.tdR}>{c.currentPrice > 0 ? fmtUSD(c.currentPrice) : '-'}</td>
                   <td style={S.tdR}>{fmtUSD(c.totalInvested)}</td>
                   <td style={{ ...S.tdR, color: c.profit >= 0 ? '#006100' : '#9c0006' }}>
                     {c.profit >= 0 ? '+' : ''}{fmtUSD(c.profit)}
@@ -412,7 +454,7 @@ export default function InfiniteJournalPage() {
               ))}
               {cycleSummaries.length > 1 && (
                 <tr style={{ backgroundColor: '#f5f5f5', fontWeight: 600 }}>
-                  <td style={S.td} colSpan={4}>합계</td>
+                  <td style={S.td} colSpan={5}>합계</td>
                   <td style={S.tdR}>{fmtUSD(totalInvested)}</td>
                   <td style={{ ...S.tdR, color: totalProfit >= 0 ? '#006100' : '#9c0006' }}>
                     {totalProfit >= 0 ? '+' : ''}{fmtUSD(totalProfit)}
@@ -426,7 +468,7 @@ export default function InfiniteJournalPage() {
                 </tr>
               )}
               {cycleSummaries.length === 0 && (
-                <tr><td style={S.td} colSpan={8}>사이클 없음</td></tr>
+                <tr><td style={S.td} colSpan={9}>사이클 없음</td></tr>
               )}
             </tbody>
           </table>
