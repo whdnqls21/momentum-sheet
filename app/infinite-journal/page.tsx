@@ -48,6 +48,7 @@ export default function InfiniteJournalPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [exchangeRate, setExchangeRate] = useState(1440);
 
   // 폼 상태
@@ -150,16 +151,18 @@ export default function InfiniteJournalPage() {
 
     try {
       setLoading(true);
+      const isEdit = !!editingId;
       const r = await fetch('/api/infinite/journal', {
-        method: 'POST',
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(isEdit ? { ...body, id: editingId } : body),
       });
       if (!r.ok) {
         const err = await r.json();
-        throw new Error(err.error || '기록 추가 실패');
+        throw new Error(err.error || (isEdit ? '기록 수정 실패' : '기록 추가 실패'));
       }
       setFormOpen(false);
+      setEditingId(null);
       resetForm();
       await fetchData();
     } catch (e: unknown) {
@@ -167,7 +170,27 @@ export default function InfiniteJournalPage() {
     } finally {
       setLoading(false);
     }
-  }, [cycles, formType, formDate, formPrice, formQty, formSlot, formAmountUSD, formAmountKRW, formExRate, formNotes, fetchData]);
+  }, [editingId, cycles, formType, formDate, formPrice, formQty, formSlot, formAmountUSD, formAmountKRW, formExRate, formNotes, fetchData]);
+
+  // 기록 수정 모드 진입
+  const openEditForm = useCallback((j: InfiniteBuyJournal) => {
+    setEditingId(j.id);
+    setFormType(j.record_type);
+    setFormDate(j.trade_date);
+    setFormNotes(j.notes || '');
+    if (j.record_type === 'exchange') {
+      setFormAmountUSD(j.amount_usd != null ? String(j.amount_usd) : '');
+      setFormAmountKRW(j.amount_krw != null ? String(j.amount_krw) : '');
+      setFormExRate(j.exchange_rate != null ? String(j.exchange_rate) : '');
+      setFormPrice(''); setFormQty(''); setFormSlot('');
+    } else {
+      setFormPrice(j.price != null ? String(j.price) : '');
+      setFormQty(j.quantity != null ? String(j.quantity) : '');
+      setFormSlot(j.slot_num != null ? String(j.slot_num) : '');
+      setFormAmountUSD(''); setFormAmountKRW(''); setFormExRate('');
+    }
+    setFormOpen(true);
+  }, []);
 
   const todayLocal = () => {
     const d = new Date();
@@ -264,7 +287,7 @@ export default function InfiniteJournalPage() {
       refreshing={loading}
       ribbonExtra={
         <>
-          <button className="btn-ribbon" onClick={() => { resetForm(); setFormOpen(true); }}>
+          <button className="btn-ribbon" onClick={() => { setEditingId(null); resetForm(); setFormOpen(true); }}>
             기록 추가
           </button>
           <select
@@ -291,10 +314,10 @@ export default function InfiniteJournalPage() {
         </div>
       )}
 
-      {/* ── 기록 추가 모달 ── */}
+      {/* ── 기록 추가/수정 모달 ── */}
       {formOpen && (
         <div
-          onClick={() => setFormOpen(false)}
+          onClick={() => { setFormOpen(false); setEditingId(null); }}
           style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
         >
           <div
@@ -302,15 +325,15 @@ export default function InfiniteJournalPage() {
             style={{ backgroundColor: '#fff', border: '1px solid #b4b4b4', boxShadow: '0 4px 16px rgba(0,0,0,0.25)', width: '90%', maxWidth: 400, display: 'flex', flexDirection: 'column' }}
           >
             <div style={{ backgroundColor: '#217346', color: '#fff', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 700, fontSize: 12 }}>
-              <span>기록 추가</span>
-              <button onClick={() => setFormOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</button>
+              <span>{editingId ? '기록 수정' : '기록 추가'}</span>
+              <button onClick={() => { setFormOpen(false); setEditingId(null); }} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ padding: 16 }}>
-              {/* 유형 선�� */}
+              {/* 유형 선택 (수정 시 잠금) */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 {(['buy', 'sell', 'exchange'] as const).map(t => (
-                  <label key={t} style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-                    <input type="radio" name="recordType" checked={formType === t} onChange={() => setFormType(t)} />
+                  <label key={t} style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, cursor: editingId ? 'not-allowed' : 'pointer', opacity: editingId && formType !== t ? 0.4 : 1 }}>
+                    <input type="radio" name="recordType" checked={formType === t} disabled={!!editingId} onChange={() => setFormType(t)} />
                     {TAG_LABELS[t]}
                   </label>
                 ))}
@@ -477,19 +500,25 @@ export default function InfiniteJournalPage() {
 
       {/* ── 매매일지 ── */}
       <div style={S.section}>매매일지</div>
-      {renderJournalTable(tradeJournal)}
+      {renderJournalTable(tradeJournal, activeCycle?.cycle_num ?? null, openEditForm)}
 
       <div style={{ height: 20 }} />
     </ExcelFrame>
   );
 }
 
-function renderJournalTable(items: InfiniteBuyJournal[]) {
+function renderJournalTable(
+  items: InfiniteBuyJournal[],
+  activeCycleNum: number | null,
+  onEdit: (j: InfiniteBuyJournal) => void,
+) {
   const S2 = {
     th: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'left' as const, whiteSpace: 'nowrap' as const },
     thR: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, whiteSpace: 'nowrap' as const },
+    thC: { padding: '6px 10px', fontSize: 11, fontWeight: 600, backgroundColor: '#f5f5f5', borderBottom: '1px solid #d4d4d4', borderRight: '1px solid #e0e0e0', textAlign: 'center' as const, whiteSpace: 'nowrap' as const },
     td: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0' },
     tdR: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0', textAlign: 'right' as const, fontFamily: 'monospace' },
+    tdC: { padding: '5px 10px', fontSize: 11, borderBottom: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0', textAlign: 'center' as const },
   };
   const fmtUSD2 = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtDate2 = (d: string) => { const [, m, day] = d.split('-'); return `${m}/${day}`; };
@@ -497,20 +526,22 @@ function renderJournalTable(items: InfiniteBuyJournal[]) {
   return (
     <div style={{ margin: '0 0 12px', border: '1px solid #d4d4d4', borderRadius: '0 0 4px 4px', overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
           <thead>
             <tr>
               {([
                 ['사이클', 'L'], ['슬롯', 'R'], ['일자', 'L'], ['유형', 'L'],
                 ['단가', 'R'], ['수량', 'R'], ['금액($)', 'R'],
-                ['메모', 'L'],
-              ] as [string, 'L' | 'R'][]).map(([h, a]) => (
-                <th key={h} style={a === 'R' ? S2.thR : S2.th}>{h}</th>
+                ['메모', 'L'], ['', 'C'],
+              ] as [string, 'L' | 'R' | 'C'][]).map(([h, a], i) => (
+                <th key={i} style={a === 'R' ? S2.thR : a === 'C' ? S2.thC : S2.th}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {items.map(j => (
+            {items.map(j => {
+              const editable = activeCycleNum != null && j.cycle_num === activeCycleNum;
+              return (
               <tr key={j.id} style={{ backgroundColor: ROW_BG[j.record_type] || undefined }}>
                 <td style={S2.td}>#{j.cycle_num}</td>
                 <td style={S2.tdR}>{j.slot_num ?? '-'}</td>
@@ -528,10 +559,21 @@ function renderJournalTable(items: InfiniteBuyJournal[]) {
                 <td style={S2.tdR}>{j.quantity ?? '-'}</td>
                 <td style={S2.tdR}>{j.amount_usd ? fmtUSD2(j.amount_usd) : '-'}</td>
                 <td style={{ ...S2.td, color: '#888', fontSize: 10 }}>{j.notes || ''}</td>
+                <td style={S2.tdC}>
+                  {editable && (
+                    <button
+                      onClick={() => onEdit(j)}
+                      style={{ padding: '2px 8px', fontSize: 10, fontWeight: 600, border: '1px solid #217346', borderRadius: 3, cursor: 'pointer', backgroundColor: '#fff', color: '#217346' }}
+                    >
+                      수정
+                    </button>
+                  )}
+                </td>
               </tr>
-            ))}
+            );
+            })}
             {items.length === 0 && (
-              <tr><td style={S2.td} colSpan={8}>기록 없음</td></tr>
+              <tr><td style={S2.td} colSpan={9}>기록 없음</td></tr>
             )}
           </tbody>
         </table>
